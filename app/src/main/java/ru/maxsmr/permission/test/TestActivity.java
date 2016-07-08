@@ -17,7 +17,7 @@ import java.util.Arrays;
 import ru.maxsmr.permissionchecker.PermissionChecker;
 
 
-public class TestActivity extends AppCompatActivity {
+public class TestActivity extends AppCompatActivity implements PermissionChecker.OnDialogShowListener {
 
     @NonNull
     private Dialog createAlertDeniedDialog() {
@@ -56,17 +56,22 @@ public class TestActivity extends AppCompatActivity {
 
     boolean isSettingsScreenShowed = false;
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    private void initPermissionChecker() {
         PermissionChecker.initInstance(this);
         if (PermissionChecker.getInstance().getPermissionsCount() > 0) {
+            PermissionChecker.getInstance().getDialogShowObservable().registerObserver(this);
             PermissionChecker.getInstance().setDeniedDialog(createAlertDeniedDialog(), true);
             PermissionChecker.getInstance().setGrantedDialog(createAlertGrantedDialog(null));
             PermissionChecker.getInstance().requestAppPermissions();
         } else {
             createAlertNoPermissionsDialog().show();
         }
+    }
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initPermissionChecker();
     }
 
     @Override
@@ -85,6 +90,7 @@ public class TestActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        PermissionChecker.getInstance().getDialogShowObservable().unregisterObserver(this);
         PermissionChecker.releaseInstance();
     }
 
@@ -97,5 +103,15 @@ public class TestActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
         startActivity(intent);
+    }
+
+    @Override
+    public void onGrantedDialogShow(@Nullable Dialog dialog, String permission) {
+        PermissionChecker.getInstance().setGrantedDialog(createAlertGrantedDialog(permission));
+    }
+
+    @Override
+    public void onDeniedDialogShow(@Nullable Dialog dialog, String permission) {
+
     }
 }
