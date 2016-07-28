@@ -61,5 +61,38 @@ public final class PermissionUtils {
             this.hasPermission = hasPermission;
             this.isDialogShown = isDialogShown;
         }
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) return true;
+            if (object == null || getClass() != object.getClass()) return false;
+
+            PermissionResponse that = (PermissionResponse) object;
+
+            if (requestCode != that.requestCode) return false;
+            if (hasPermission != that.hasPermission) return false;
+            if (isDialogShown != that.isDialogShown) return false;
+            return permission != null ? permission.equals(that.permission) : that.permission == null;
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = permission != null ? permission.hashCode() : 0;
+            result = 31 * result + requestCode;
+            result = 31 * result + (hasPermission ? 1 : 0);
+            result = 31 * result + (isDialogShown ? 1 : 0);
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "PermissionResponse{" +
+                    "permission='" + permission + '\'' +
+                    ", requestCode=" + requestCode +
+                    ", hasPermission=" + hasPermission +
+                    ", isDialogShown=" + isDialogShown +
+                    '}';
+        }
     }
 }
