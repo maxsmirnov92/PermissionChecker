@@ -1,0 +1,22 @@
+{
+
+  "package": {
+    "name": "PermissionChecker",
+    "repo": "maven",
+    "subject": "maxsmirnov92"
+  },
+
+  "version": {
+    "name": "[version]"
+  },
+
+  "files": [
+    {
+      "includePattern": "permissionchecker/build/release/(.*)",
+      "uploadPattern": "$1"
+    }
+  ],
+
+  "publish": true
+
+}
