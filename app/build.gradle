@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        applicationId "ru.maxsmr.permission.test"
+        applicationId "net.maxsmr.permission.test"
         minSdkVersion 9
         targetSdkVersion 23
         versionCode 1

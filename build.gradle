@@ -18,7 +18,7 @@ allprojects {
     }
 }
 
-def version = "1.0"
+def version = "1.0.1"
 
 task clean(type: Delete) {
     delete rootProject.buildDir
