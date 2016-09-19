@@ -7,12 +7,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
+import java.util.Set;
 
 
 public final class PermissionChecker {
@@ -55,8 +56,8 @@ public final class PermissionChecker {
     @NonNull
     private final OnDialogShowObservable dialogShowObservable = new OnDialogShowObservable();
 
-    private final Stack<String> mLastGrantedPermissions = new Stack<>();
-    private final Stack<String> mLastDeniedPermissions = new Stack<>();
+    private final Set<String> mLastGrantedPermissions = new LinkedHashSet<>();
+    private final Set<String> mLastDeniedPermissions = new LinkedHashSet<>();
 
     private PermissionChecker(@NonNull Activity activity) {
         this.mActivity = activity;
@@ -71,7 +72,7 @@ public final class PermissionChecker {
     }
 
     private void release() {
-        mLastGrantedPermissions.clear();;
+        mLastGrantedPermissions.clear();
         mLastDeniedPermissions.clear();
         mPermissionsRequestCodes.clear();
         mActivity = null;
@@ -95,16 +96,16 @@ public final class PermissionChecker {
         return mLastGrantedPermissions.size();
     }
 
-    public List<String> getmLastGrantedPermissions() {
-        return new ArrayList<>(mLastGrantedPermissions);
+    public Set<String> getLastGrantedPermissions() {
+        return Collections.unmodifiableSet(mLastGrantedPermissions);
     }
 
     public int getLastDeniedPermissionsCount() {
         return mLastDeniedPermissions.size();
     }
 
-    public List<String> getmLastDeniedPermissions() {
-        return new ArrayList<>(mLastDeniedPermissions);
+    public Set<String> getLastDeniedPermissions() {
+        return Collections.unmodifiableSet(mLastDeniedPermissions);
     }
 
     public void setDeniedDialog(Dialog deniedDialog/*, boolean enableExitOnDismiss*/) {
@@ -170,11 +171,15 @@ public final class PermissionChecker {
 
     public boolean onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-        if (permissions.length != 1) {
+        if (permissions.length == 0 || grantResults.length == 0) {
+            return false;
+        }
+
+        if (permissions.length > 1) {
             throw new IllegalArgumentException("permissions must contain only one element");
         }
 
-        if (grantResults.length != 1) {
+        if (grantResults.length > 1) {
             throw new IllegalArgumentException("grantResults must contain only one element");
         }
 
@@ -193,23 +198,27 @@ public final class PermissionChecker {
         return granted;
     }
 
-    /** @return false if at least one permission is not granted, true otherwise */
+    /**
+     * @return false if at least one permission is not granted, true otherwise
+     */
     public boolean checkAppPermissions() {
         boolean has = true;
         mLastGrantedPermissions.clear();
         mLastDeniedPermissions.clear();
         for (String permission : mPermissionsRequestCodes.keySet()) {
             if (PermissionUtils.has(mActivity, permission)) {
-                mLastGrantedPermissions.push(permission);
+                mLastGrantedPermissions.add(permission);
             } else {
-                mLastDeniedPermissions.push(permission);
+                mLastDeniedPermissions.add(permission);
                 has = false;
             }
         }
         return has;
     }
 
-    /** @return false if at least one system dialog was not shown on missing permission, true if all dialogs were shown */
+    /**
+     * @return false if at least one system dialog was not shown on missing permission, true if all dialogs were shown
+     */
     public boolean requestAppPermissions() {
         mLastGrantedPermissions.clear();
         mLastDeniedPermissions.clear();
@@ -232,9 +241,7 @@ public final class PermissionChecker {
         if (!mPermissionsRequestCodes.containsKey(permission)) {
             throw new IllegalArgumentException("no such permission: " + permission);
         }
-        if (!mLastGrantedPermissions.contains(permission)) {
-            mLastGrantedPermissions.push(permission);
-        }
+        mLastGrantedPermissions.add(permission);
         showGrantedDialog(permission);
     }
 
@@ -242,15 +249,13 @@ public final class PermissionChecker {
         if (!mPermissionsRequestCodes.containsKey(permission)) {
             throw new IllegalArgumentException("no such permission: " + permission);
         }
-        if (!mLastDeniedPermissions.contains(permission)) {
-            mLastDeniedPermissions.push(permission);
-        }
+        mLastDeniedPermissions.add(permission);
         showDeniedDialog(permission);
     }
 
     public interface OnDialogShowListener {
 
-        void onBeforeGrantedDialogShow(@Nullable  Dialog dialog, String permission);
+        void onBeforeGrantedDialogShow(@Nullable Dialog dialog, String permission);
 
         void onBeforeDeniedDialogShow(@Nullable Dialog dialog, String permission);
     }

@@ -1,1 +1,1 @@
-include ':app', ':permissionchecker'
+include /*':app',*/ ':permissionchecker'
