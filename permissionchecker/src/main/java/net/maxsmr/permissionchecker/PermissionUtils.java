@@ -6,6 +6,11 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
+
 public final class PermissionUtils {
 
     public PermissionUtils() {
@@ -46,6 +51,26 @@ public final class PermissionUtils {
         } else {
             return new PermissionResponse(permission, requestCode, true, false);
         }
+    }
+
+    static int generateRequestCode(Collection<Integer> usedCodes) {
+        int newCode = 1;
+        if (usedCodes != null && !usedCodes.isEmpty()) {
+            List<Integer> usedCodesCopy = new ArrayList<>(usedCodes);
+            for (int i = 0; i < usedCodesCopy.size(); i++) {
+                Integer code = usedCodesCopy.get(i);
+                if (code != null && code == newCode) {
+                    newCode = randInt(1, Short.MAX_VALUE);
+                    i = 0;
+                }
+            }
+        }
+        return newCode;
+    }
+
+    private static int randInt(int min, int max) {
+        Random rand = new Random();
+        return rand.nextInt((max - min) + 1) + min;
     }
 
     public static class PermissionResponse {

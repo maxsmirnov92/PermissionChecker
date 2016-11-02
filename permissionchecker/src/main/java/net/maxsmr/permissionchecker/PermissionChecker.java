@@ -147,7 +147,8 @@ public final class PermissionChecker {
                 return requestCode;
             }
             Collection<Integer> codes = mPermissionsRequestCodes.values();
-            int newCode = !codes.isEmpty() ? codes.toArray(new Integer[codes.size()])[codes.size() - 1] << codes.size() : 1;
+//            int newCode = !codes.isEmpty() ? codes.toArray(new Integer[codes.size()])[codes.size() - 1] << codes.size() : 1;
+            int newCode = PermissionUtils.generateRequestCode(codes);
             mPermissionsRequestCodes.put(permission, newCode);
             return newCode;
         }
