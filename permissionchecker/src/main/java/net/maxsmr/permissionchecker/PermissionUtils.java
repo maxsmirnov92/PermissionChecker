@@ -60,7 +60,7 @@ public final class PermissionUtils {
             for (int i = 0; i < usedCodesCopy.size(); i++) {
                 Integer code = usedCodesCopy.get(i);
                 if (code != null && code == newCode) {
-                    newCode = randInt(1, Short.MAX_VALUE);
+                    newCode = randInt(1, Byte.MAX_VALUE * 2);
                     i = 0;
                 }
             }
