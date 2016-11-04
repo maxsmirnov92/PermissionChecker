@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 
@@ -59,5 +60,14 @@ public final class PackageHelper {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         context.startActivity(intent);
+    }
+
+    public static void openAppManageSettingsScreen(@NonNull Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            context.startActivity(
+                    new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+                            .setData(Uri.parse("package:" + context.getPackageName()))
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        }
     }
 }

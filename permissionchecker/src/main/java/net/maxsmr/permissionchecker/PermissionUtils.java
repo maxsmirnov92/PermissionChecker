@@ -1,7 +1,11 @@
 package net.maxsmr.permissionchecker;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -13,12 +17,23 @@ import java.util.Random;
 
 public final class PermissionUtils {
 
+    public static final String PERMISSION_WRITE_SETTINGS = "android.permission.WRITE_SETTINGS";
+
     public PermissionUtils() {
         throw new AssertionError("no instances.");
     }
 
-    public static boolean has(@NonNull Activity activity, String permission) {
-        return ContextCompat.checkSelfPermission(activity, permission) == PackageManager.PERMISSION_GRANTED;
+    public static boolean has(@NonNull Context context, String permission) {
+        return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public static boolean hasCanWriteSettingsPermission(@NonNull Context context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!android.provider.Settings.System.canWrite(context)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static boolean isPermissionGranted(int requestCode, int requiringRequestCode, int[] grantResults, int permissionIndex) {
@@ -50,6 +65,12 @@ public final class PermissionUtils {
             }
         } else {
             return new PermissionResponse(permission, requestCode, true, false);
+        }
+    }
+
+    public static void requestCanWriteSettingsPermission(@NonNull Context context) {
+        if (!hasCanWriteSettingsPermission(context)) {
+            PackageHelper.openAppManageSettingsScreen(context);
         }
     }
 

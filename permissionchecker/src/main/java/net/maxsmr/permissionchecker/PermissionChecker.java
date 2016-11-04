@@ -3,6 +3,7 @@ package net.maxsmr.permissionchecker;
 import android.app.Activity;
 import android.app.Dialog;
 import android.database.Observable;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -44,6 +45,16 @@ public final class PermissionChecker {
         }
     }
 
+    private static Set<String> sSpecialSystemPermissions = new LinkedHashSet<>();
+
+    static {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            sSpecialSystemPermissions.add(PermissionUtils.PERMISSION_WRITE_SETTINGS);
+        }
+    }
+
+    private boolean isReleased = false;
+
     private final Map<String, Integer> mPermissionsRequestCodes = new LinkedHashMap<>();
 
     private Activity mActivity;
@@ -56,8 +67,16 @@ public final class PermissionChecker {
     @NonNull
     private final OnDialogShowObservable dialogShowObservable = new OnDialogShowObservable();
 
+    /**
+     * all last granted permissions (including {@link PermissionChecker#mSpecialPermissions} set)
+     */
     private final Set<String> mLastGrantedPermissions = new LinkedHashSet<>();
+    /**
+     * all last denied permissions (including {@link PermissionChecker#mSpecialPermissions} set)
+     */
     private final Set<String> mLastDeniedPermissions = new LinkedHashSet<>();
+
+    private final Set<String> mSpecialPermissions = new LinkedHashSet<>();
 
     private PermissionChecker(@NonNull Activity activity) {
         this.mActivity = activity;
@@ -67,87 +86,118 @@ public final class PermissionChecker {
     private void init() {
         List<String> permissions = PackageHelper.getPermissionsForPackage(mActivity, mActivity.getPackageName());
         for (String permission : permissions) {
-            generateRequestCodeForPermission(permission);
+            if (!sSpecialSystemPermissions.contains(permission)) {
+                generateRequestCodeForPermission(permission);
+            } else {
+                mSpecialPermissions.add(permission);
+            }
+        }
+    }
+
+    private void checkReleased() {
+        if (isReleased) {
+            throw new IllegalStateException(PermissionChecker.class.getSimpleName() + " was released");
         }
     }
 
     private void release() {
+        checkReleased();
         mLastGrantedPermissions.clear();
         mLastDeniedPermissions.clear();
         mPermissionsRequestCodes.clear();
         mActivity = null;
         mGrantedDialog = null;
         mDeniedDialog = null;
+        isReleased = true;
     }
 
     public Observable<OnDialogShowListener> getDialogShowObservable() {
         return dialogShowObservable;
     }
 
-    public int getPermissionsCount() {
+    public synchronized boolean hasPermissions() {
+        return getPermissionsCount() > 0;
+    }
+
+    public  synchronized int getPermissionsCount() {
         return mPermissionsRequestCodes.size();
     }
 
-    public Map<String, Integer> getPermissions() {
-        return new LinkedHashMap<>(mPermissionsRequestCodes);
+    public synchronized Set<String> getPermissions() {
+        return Collections.unmodifiableSet(mPermissionsRequestCodes.keySet());
     }
 
-    public int getLastGrantedPermissionsCount() {
+    public synchronized Map<String, Integer> getPermissionsWithCodes() {
+        return Collections.unmodifiableMap(mPermissionsRequestCodes);
+    }
+
+    public synchronized boolean hasLastGrantedPermissions() {
+        return getLastGrantedPermissionsCount() > 0;
+    }
+
+    public synchronized int getLastGrantedPermissionsCount() {
         return mLastGrantedPermissions.size();
     }
 
-    public Set<String> getLastGrantedPermissions() {
+    public synchronized Set<String> getLastGrantedPermissions() {
         return Collections.unmodifiableSet(mLastGrantedPermissions);
     }
 
-    public int getLastDeniedPermissionsCount() {
+    public synchronized boolean hasLastDeniedPermissions() {
+        return getLastDeniedPermissionsCount() > 0;
+    }
+
+    public synchronized int getLastDeniedPermissionsCount() {
         return mLastDeniedPermissions.size();
     }
 
-    public Set<String> getLastDeniedPermissions() {
+    public synchronized Set<String> getLastDeniedPermissions() {
         return Collections.unmodifiableSet(mLastDeniedPermissions);
     }
 
-    public void setDeniedDialog(Dialog deniedDialog/*, boolean enableExitOnDismiss*/) {
-        this.mDeniedDialog = deniedDialog;
-//        this.mEnableExitOnDismiss = enableExitOnDismiss;
+    public synchronized boolean hasSpecialPermissions() {
+        return getSpecialPermissionsCount() > 0;
     }
 
-    public void setGrantedDialog(Dialog grantedDialog) {
+    public synchronized int getSpecialPermissionsCount() {
+        return mSpecialPermissions.size();
+    }
+
+    public synchronized Set<String> getSpecialPermissions() {
+        return Collections.unmodifiableSet(mSpecialPermissions);
+    }
+
+    public synchronized void setDeniedDialog(Dialog deniedDialog) {
+        this.mDeniedDialog = deniedDialog;
+    }
+
+    public synchronized void setGrantedDialog(Dialog grantedDialog) {
         this.mGrantedDialog = grantedDialog;
     }
 
-    private void showDeniedDialog(String permission) {
+    private synchronized void showDeniedDialog(String permission) {
+        checkReleased();
         dialogShowObservable.dispatchBeforeDeniedDialogShow(permission);
         if (mDeniedDialog != null) {
-//            if (mEnableExitOnDismiss) {
-//                mDeniedDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-//                    @Override
-//                    public void onDismiss(DialogInterface dialog) {
-//                        mActivity.finish();
-//                        System.exit(0);
-//                    }
-//                });
-//            }
             mDeniedDialog.show();
         }
     }
 
-    private void showGrantedDialog(String permission) {
+    private synchronized void showGrantedDialog(String permission) {
+        checkReleased();
         dialogShowObservable.dispatchBeforeGrantedDialogShow(permission);
         if (mGrantedDialog != null) {
             mGrantedDialog.show();
         }
     }
 
-    private int generateRequestCodeForPermission(String permission) {
+    private synchronized int generateRequestCodeForPermission(String permission) {
         if (!TextUtils.isEmpty(permission)) {
             Integer requestCode = mPermissionsRequestCodes.get(permission);
             if (requestCode != null) {
                 return requestCode;
             }
             Collection<Integer> codes = mPermissionsRequestCodes.values();
-//            int newCode = !codes.isEmpty() ? codes.toArray(new Integer[codes.size()])[codes.size() - 1] << codes.size() : 1;
             int newCode = PermissionUtils.generateRequestCode(codes);
             mPermissionsRequestCodes.put(permission, newCode);
             return newCode;
@@ -155,13 +205,13 @@ public final class PermissionChecker {
         return NO_REQUEST_CODE;
     }
 
-    public int getRequestCodeForPermission(String permission) {
+    public synchronized int getRequestCodeForPermission(String permission) {
         Integer code = mPermissionsRequestCodes.get(permission);
         return code != null ? code : NO_REQUEST_CODE;
     }
 
     @Nullable
-    public String getPermissionForRequestCode(int code) {
+    public synchronized String getPermissionForRequestCode(int code) {
         for (Map.Entry<String, Integer> entry : mPermissionsRequestCodes.entrySet()) {
             if (entry.getValue() != null && entry.getValue() == code) {
                 return entry.getKey();
@@ -170,7 +220,9 @@ public final class PermissionChecker {
         return null;
     }
 
-    public boolean onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public synchronized boolean onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        checkReleased();
 
         if (permissions.length == 0 || grantResults.length == 0) {
             return false;
@@ -202,7 +254,8 @@ public final class PermissionChecker {
     /**
      * @return false if at least one permission is not granted, true otherwise
      */
-    public boolean checkAppPermissions() {
+    public synchronized boolean checkAppPermissions() {
+        checkReleased();
         boolean has = true;
         mLastGrantedPermissions.clear();
         mLastDeniedPermissions.clear();
@@ -214,13 +267,24 @@ public final class PermissionChecker {
                 has = false;
             }
         }
+        for (String special : mSpecialPermissions) {
+            if (PermissionUtils.PERMISSION_WRITE_SETTINGS.equals(special)) {
+                if (PermissionUtils.hasCanWriteSettingsPermission(mActivity)) {
+                    mLastGrantedPermissions.add(special);
+                } else {
+                    mLastDeniedPermissions.add(special);
+                    has = false;
+                }
+            }
+        }
         return has;
     }
 
     /**
      * @return false if at least one system dialog was not shown on missing permission, true if all dialogs were shown
      */
-    public boolean requestAppPermissions() {
+    public synchronized boolean requestAppPermissions() {
+        checkReleased();
         mLastGrantedPermissions.clear();
         mLastDeniedPermissions.clear();
         boolean result = true;
@@ -233,6 +297,11 @@ public final class PermissionChecker {
                 if (response.hasPermission) {
                     handlePermissionGranted(entry.getKey());
                 }
+            }
+        }
+        for (String special : mSpecialPermissions) {
+            if (PermissionUtils.PERMISSION_WRITE_SETTINGS.equals(special)) {
+                PermissionUtils.requestCanWriteSettingsPermission(mActivity);
             }
         }
         return result;
