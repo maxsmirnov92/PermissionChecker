@@ -2,9 +2,7 @@ package net.maxsmr.permissionchecker;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -89,7 +87,7 @@ public final class PermissionUtils {
         return newCode;
     }
 
-    private static int randInt(int min, int max) {
+    static int randInt(int min, int max) {
         Random rand = new Random();
         return rand.nextInt((max - min) + 1) + min;
     }

@@ -10,16 +10,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
-import java.util.Arrays;
-import java.util.Stack;
-
 import net.maxsmr.permissionchecker.PackageHelper;
 import net.maxsmr.permissionchecker.PermissionChecker;
 
+import java.util.Arrays;
+import java.util.Stack;
 
-public class TestActivity extends AppCompatActivity implements PermissionChecker.OnDialogShowListener {
 
-    private static final String ARG_IS_SETTINGS_SCREEN_SHOWED = TestActivity.class.getName() + ".ARG_IS_SETTINGS_SCREEN_SHOWED";
+public class TestPermissionsActivity extends AppCompatActivity implements PermissionChecker.OnDialogShowListener {
+
+    private static final String ARG_IS_SETTINGS_SCREEN_SHOWED = TestPermissionsActivity.class.getName() + ".ARG_IS_SETTINGS_SCREEN_SHOWED";
 
     private TextView messageView;
 
@@ -96,7 +96,7 @@ public class TestActivity extends AppCompatActivity implements PermissionChecker
     }
 
     private void initPermissionChecker() {
-        PermissionChecker.initInstance(this);
+        PermissionChecker.initInstance(this, false);
         if (PermissionChecker.getInstance().getPermissionsCount() > 0) {
             PermissionChecker.getInstance().getDialogShowObservable().registerObserver(this);
         } else {
@@ -145,7 +145,7 @@ public class TestActivity extends AppCompatActivity implements PermissionChecker
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Log.d(TestActivity.class.getSimpleName(), "onRequestPermissionsResult: requestCode=" + requestCode + ", permissions=" + Arrays.toString(permissions) + ", grantResults=" + Arrays.toString(grantResults));
+        Log.d(TestPermissionsActivity.class.getSimpleName(), "onRequestPermissionsResult: requestCode=" + requestCode + ", permissions=" + Arrays.toString(permissions) + ", grantResults=" + Arrays.toString(grantResults));
         /*boolean result = */PermissionChecker.getInstance().onRequestPermissionsResult(requestCode, permissions, grantResults);
 //        if (!result) {
 //            openAppSettingsScreen();
@@ -169,6 +169,12 @@ public class TestActivity extends AppCompatActivity implements PermissionChecker
     }
 
     @Override
+    public void onDismissAllDialogs() {
+        dismissGrantedDialogs();
+        dismissDeniedDialogs();
+    }
+
+    @Override
     public void onBeforeGrantedDialogShow(@Nullable Dialog dialog, String permission) {
         grantedDialogs.push(createPermissionAlertDialog(permission, true, null));
         PermissionChecker.getInstance().setGrantedDialog(grantedDialogs.peek());
@@ -182,7 +188,7 @@ public class TestActivity extends AppCompatActivity implements PermissionChecker
                 if (deniedDialogs.size() == 1) {
                     openAppSettingsScreen();
                 }
-                TestActivity.this.finish();
+                TestPermissionsActivity.this.finish();
                 System.exit(0);
             }
         } : null));

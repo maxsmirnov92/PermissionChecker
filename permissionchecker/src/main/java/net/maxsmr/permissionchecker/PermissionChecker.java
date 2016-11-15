@@ -23,10 +23,10 @@ public final class PermissionChecker {
 
     private static PermissionChecker sInstance;
 
-    public static void initInstance(Activity activity) {
+    public static void initInstance(Activity activity, boolean showAllSystemDialogs) {
         if (sInstance == null) {
             synchronized (PermissionChecker.class) {
-                sInstance = new PermissionChecker(activity);
+                sInstance = new PermissionChecker(activity, showAllSystemDialogs);
             }
         }
     }
@@ -55,6 +55,8 @@ public final class PermissionChecker {
 
     private boolean isReleased = false;
 
+    private final boolean mShowAllSystemDialogs;
+
     private final Map<String, Integer> mPermissionsRequestCodes = new LinkedHashMap<>();
 
     private Activity mActivity;
@@ -78,9 +80,10 @@ public final class PermissionChecker {
 
     private final Set<String> mSpecialPermissions = new LinkedHashSet<>();
 
-    private PermissionChecker(@NonNull Activity activity) {
-        this.mActivity = activity;
-        this.init();
+    private PermissionChecker(@NonNull Activity activity, boolean showAllSystemDialogs) {
+        mActivity = activity;
+        mShowAllSystemDialogs = showAllSystemDialogs;
+        init();
     }
 
     private void init() {
@@ -115,11 +118,21 @@ public final class PermissionChecker {
         return dialogShowObservable;
     }
 
+
+    public boolean isAllPermissionsChecked() {
+        return PermissionChecker.getInstance().getLastGrantedPermissionsCount() + PermissionChecker.getInstance().getLastDeniedPermissionsCount()
+                == PermissionChecker.getInstance().getPermissionsCount() + PermissionChecker.getInstance().getSpecialPermissionsCount();
+    }
+
+    public boolean isAllPermissionsGranted() {
+        return isAllPermissionsChecked() && (PermissionChecker.getInstance().getLastGrantedPermissionsCount() == PermissionChecker.getInstance().getPermissionsCount() + PermissionChecker.getInstance().getSpecialPermissionsCount());
+    }
+
     public synchronized boolean hasPermissions() {
         return getPermissionsCount() > 0;
     }
 
-    public  synchronized int getPermissionsCount() {
+    public synchronized int getPermissionsCount() {
         return mPermissionsRequestCodes.size();
     }
 
@@ -248,7 +261,8 @@ public final class PermissionChecker {
         } else {
             handlePermissionGranted(permission);
         }
-        return granted;
+
+        return granted && (mShowAllSystemDialogs || requestAppPermissions());
     }
 
     /**
@@ -287,14 +301,21 @@ public final class PermissionChecker {
         checkReleased();
         mLastGrantedPermissions.clear();
         mLastDeniedPermissions.clear();
+        dialogShowObservable.dispatchDismissAllDialogs();
         boolean result = true;
+        boolean systemDialogShowed = false;
         for (Map.Entry<String, Integer> entry : mPermissionsRequestCodes.entrySet()) {
-            PermissionUtils.PermissionResponse response = PermissionUtils.requestRuntimePermission(mActivity, entry.getKey(), entry.getValue());
+            PermissionUtils.PermissionResponse response = mShowAllSystemDialogs || (!PermissionUtils.has(mActivity, entry.getKey()) && !systemDialogShowed) ?
+                    PermissionUtils.requestRuntimePermission(mActivity, entry.getKey(), entry.getValue()) :
+                    new PermissionUtils.PermissionResponse(entry.getKey(), entry.getValue(), true, true);
             if (!response.hasPermission && !response.isDialogShown) {
                 result = false;
                 handlePermissionDenied(entry.getKey());
             } else {
-                if (response.hasPermission) {
+                if (!response.hasPermission) {
+                    systemDialogShowed = true;
+                    result = false;
+                } else {
                     handlePermissionGranted(entry.getKey());
                 }
             }
@@ -325,6 +346,8 @@ public final class PermissionChecker {
 
     public interface OnDialogShowListener {
 
+        void onDismissAllDialogs();
+
         void onBeforeGrantedDialogShow(@Nullable Dialog dialog, String permission);
 
         void onBeforeDeniedDialogShow(@Nullable Dialog dialog, String permission);
@@ -332,15 +355,27 @@ public final class PermissionChecker {
 
     private class OnDialogShowObservable extends Observable<OnDialogShowListener> {
 
+        void dispatchDismissAllDialogs() {
+            synchronized (mObservers) {
+                for (OnDialogShowListener l : mObservers) {
+                    l.onDismissAllDialogs();
+                }
+            }
+        }
+
         void dispatchBeforeGrantedDialogShow(String permission) {
-            for (OnDialogShowListener l : mObservers) {
-                l.onBeforeGrantedDialogShow(mGrantedDialog, permission);
+            synchronized (mObservers) {
+                for (OnDialogShowListener l : mObservers) {
+                    l.onBeforeGrantedDialogShow(mGrantedDialog, permission);
+                }
             }
         }
 
         void dispatchBeforeDeniedDialogShow(String permission) {
-            for (OnDialogShowListener l : mObservers) {
-                l.onBeforeDeniedDialogShow(mDeniedDialog, permission);
+            synchronized (mObservers) {
+                for (OnDialogShowListener l : mObservers) {
+                    l.onBeforeDeniedDialogShow(mDeniedDialog, permission);
+                }
             }
         }
     }
