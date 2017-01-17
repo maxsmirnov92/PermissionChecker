@@ -13,6 +13,7 @@ import net.maxsmr.permissionchecker.PackageHelper;
 import net.maxsmr.permissionchecker.PermissionChecker;
 import net.maxsmr.permissionchecker.R;
 
+import java.util.Collection;
 import java.util.Stack;
 
 
@@ -38,6 +39,8 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
     protected abstract boolean isShowingAllSystemDialogsEnabled();
 
     protected abstract boolean isShowingGrantedDialogEnabled(String permission);
+
+    protected abstract Collection<String> getPermissionsToIgnore();
 
     @NonNull
     private Dialog createPermissionAlertDialog(String permission, final boolean granted, DialogInterface.OnClickListener positiveClickListener) {
@@ -104,7 +107,7 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
 
     private void initPermissionChecker() {
         if (isCheckingPermissionsEnabled) {
-            PermissionChecker.initInstance(this, isShowingAllSystemDialogsEnabled());
+            PermissionChecker.initInstance(this, isShowingAllSystemDialogsEnabled(), getPermissionsToIgnore());
             if (PermissionChecker.getInstance().hasPermissions() || PermissionChecker.getInstance().hasSpecialPermissions()) {
                 PermissionChecker.getInstance().getDialogShowObservable().registerObserver(this);
             }
