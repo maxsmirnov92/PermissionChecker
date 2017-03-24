@@ -7,6 +7,8 @@ import android.widget.Toast;
 
 import net.maxsmr.permissionchecker.gui.activities.BaseSplashPermissionActivity;
 
+import java.util.Collection;
+
 public class TestSplashPermissionsActivity extends BaseSplashPermissionActivity {
 
     @Override
@@ -54,5 +56,10 @@ public class TestSplashPermissionsActivity extends BaseSplashPermissionActivity 
     @Override
     protected boolean allowRemoveCallbackWhenScreenIsOff() {
         return false;
+    }
+
+    @Override
+    protected Collection<String> getPermissionsToIgnore() {
+        return null;
     }
 }

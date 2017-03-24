@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Stack;
 
 
+@Deprecated
 public class TestPermissionsActivity extends AppCompatActivity implements PermissionChecker.OnDialogShowListener {
 
     private static final String ARG_IS_SETTINGS_SCREEN_SHOWED = TestPermissionsActivity.class.getName() + ".ARG_IS_SETTINGS_SCREEN_SHOWED";

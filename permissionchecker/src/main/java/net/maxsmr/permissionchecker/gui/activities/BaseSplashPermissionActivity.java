@@ -42,6 +42,10 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
 
     protected abstract Collection<String> getPermissionsToIgnore();
 
+    protected boolean isFinalActionAllowed() {
+        return grantedDialogs.isEmpty() && isSplashTimeouted && (!isCheckingPermissionsEnabled || PermissionChecker.getInstance().isAllPermissionsGranted());
+    }
+
     @NonNull
     private Dialog createPermissionAlertDialog(String permission, final boolean granted, DialogInterface.OnClickListener positiveClickListener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -59,7 +63,7 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
                             if (grantedDialogs.contains(dialog)) {
                                 grantedDialogs.remove(dialog);
                             }
-                            if (grantedDialogs.isEmpty() && isSplashTimeouted && (!isCheckingPermissionsEnabled || PermissionChecker.getInstance().checkAppPermissions())) {
+                            if (isFinalActionAllowed()) {
                                 doFinalAction();
                             }
                         } else {
@@ -131,13 +135,13 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
 
     @Override
     protected final long getSplashTimeout() {
-        return isShowingSplashEnabled || (isCheckingPermissionsEnabled && !PermissionChecker.getInstance().checkAppPermissions())? getBaseSplashTimeout() : 0;
+        return isShowingSplashEnabled /*|| (isCheckingPermissionsEnabled && !PermissionChecker.getInstance().isAllPermissionsGranted())*/? getBaseSplashTimeout() : 0;
     }
 
     @Override
     protected void onSplashTimeout() {
         isSplashTimeouted = true;
-        if ((!isCheckingPermissionsEnabled || PermissionChecker.getInstance().checkAppPermissions() && grantedDialogs.isEmpty())) {
+        if ((!isCheckingPermissionsEnabled || PermissionChecker.getInstance().isAllPermissionsGranted() && grantedDialogs.isEmpty())) {
             doFinalAction();
         }
     }
@@ -167,7 +171,11 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (isCheckingPermissionsEnabled) {
-            PermissionChecker.getInstance().onRequestPermissionsResult(requestCode, permissions, grantResults);
+            if (PermissionChecker.getInstance().onRequestPermissionsResult(requestCode, permissions, grantResults)) {
+                if (isFinalActionAllowed()) {
+                    doFinalAction();
+                }
+            }
         }
     }
 
@@ -186,7 +194,7 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
 
     private void openAppSettingsScreen() {
         if (isCheckingPermissionsEnabled) {
-            if (!isSettingsScreenShowedOnce && isAllPermissionsChecked() && !PermissionChecker.getInstance().checkAppPermissions()) {
+            if (!isSettingsScreenShowedOnce && isAllPermissionsChecked() && !PermissionChecker.getInstance().isAllPermissionsGranted()) {
                 PackageHelper.openAppSettingsScreen(this);
                 isSettingsScreenShowedOnce = true;
             }

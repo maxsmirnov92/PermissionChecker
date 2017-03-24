@@ -54,7 +54,6 @@ public final class PackageHelper {
         intent.addCategory(Intent.CATEGORY_DEFAULT);
         intent.setData(Uri.fromParts("package", context.getPackageName(), null));
 
-        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

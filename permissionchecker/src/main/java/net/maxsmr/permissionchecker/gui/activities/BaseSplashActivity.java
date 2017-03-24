@@ -23,8 +23,11 @@ public abstract class BaseSplashActivity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && !isDestroyed() || Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 onSplashTimeout();
             }
+            isNavigateRunnableScheduled = false;
         }
     };
+
+    private boolean isNavigateRunnableScheduled = false;
 
     protected long expiredTime = 0;
     protected long startTime = 0;
@@ -67,6 +70,15 @@ public abstract class BaseSplashActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        scheduleNavigateRunnable();
+    }
+
+    protected void scheduleNavigateRunnable() {
+
+        if (isNavigateRunnableScheduled) {
+            return;
+        }
+
         long timeout = getSplashTimeout();
 
         if (timeout < 0) {
@@ -75,6 +87,7 @@ public abstract class BaseSplashActivity extends AppCompatActivity {
 
         startTime = System.currentTimeMillis() - expiredTime;
         navigateHandler.postDelayed(navigateRunnable, expiredTime <= timeout ? timeout - expiredTime : 0);
+        isNavigateRunnableScheduled = true;
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT_WATCH)
@@ -85,6 +98,7 @@ public abstract class BaseSplashActivity extends AppCompatActivity {
         boolean isScreenOn = Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT_WATCH ? pm.isScreenOn() : pm.isInteractive();
         if (isScreenOn || allowRemoveCallbackWhenScreenIsOff()) {
             navigateHandler.removeCallbacks(navigateRunnable);
+            isNavigateRunnableScheduled = false;
         }
     }
 
