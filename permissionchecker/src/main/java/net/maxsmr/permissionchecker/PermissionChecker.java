@@ -30,13 +30,13 @@ public final class PermissionChecker {
     }
 
     public static void initInstance(Activity activity, boolean showAllSystemDialogs) {
-        initInstance(activity, showAllSystemDialogs, null);
+        initInstance(activity, showAllSystemDialogs, null, null);
     }
 
-    public static void initInstance(Activity activity, boolean showAllSystemDialogs, @Nullable Collection<String> permissionsToIgnore) {
+    public static void initInstance(Activity activity, boolean showAllSystemDialogs, @Nullable Collection<String> permissionsToIgnore, @Nullable Collection<String> permissionsToIgnoreAfterCheck) {
         if (sInstance == null) {
             synchronized (PermissionChecker.class) {
-                sInstance = new PermissionChecker(activity, showAllSystemDialogs, permissionsToIgnore);
+                sInstance = new PermissionChecker(activity, showAllSystemDialogs, permissionsToIgnore, permissionsToIgnoreAfterCheck);
             }
         }
     }
@@ -80,9 +80,14 @@ public final class PermissionChecker {
     @NonNull
     private final OnDialogShowObservable mDialogShowObservable = new OnDialogShowObservable();
 
+    @NonNull
     private final Set<String> mSpecialPermissions = new HashSet<>();
 
+    @NonNull
     private final Set<String> mPermissionsToIgnore = new HashSet<>();
+
+    @NonNull
+    private final Set<String> mPermissionsToIgnoreAfterCheck = new HashSet<>();
 
     /**
      * all last granted permissions (including {@link PermissionChecker#mSpecialPermissions} set)
@@ -95,11 +100,14 @@ public final class PermissionChecker {
 
     private Set<String> mCheckedPermissions = new LinkedHashSet<>();
 
-    private PermissionChecker(@NonNull Activity activity, boolean showAllSystemDialogs, @Nullable Collection<String> permissionsToIgnore) {
+    private PermissionChecker(@NonNull Activity activity, boolean showAllSystemDialogs, @Nullable Collection<String> permissionsToIgnore, @Nullable Collection<String> permissionsToIgnoreAfterCheck) {
         mActivity = activity;
         mShowAllSystemDialogs = showAllSystemDialogs;
         if (permissionsToIgnore != null) {
             mPermissionsToIgnore.addAll(permissionsToIgnore);
+        }
+        if (permissionsToIgnoreAfterCheck != null) {
+            mPermissionsToIgnoreAfterCheck.addAll(permissionsToIgnoreAfterCheck);
         }
         init();
     }
@@ -107,7 +115,7 @@ public final class PermissionChecker {
     private void init() {
         List<String> permissions = PackageHelper.getPermissionsForPackage(mActivity, mActivity.getPackageName());
         for (String permission : permissions) {
-            if (!shouldIgnorePermission(permission)) {
+            if (!shouldIgnorePermission(permission, false)) {
                 if (!sSpecialSystemPermissions.contains(permission)) {
                     generateRequestCodeForPermission(permission);
                 } else {
@@ -136,16 +144,17 @@ public final class PermissionChecker {
         isReleased = true;
     }
 
+    @NonNull
     public Observable<OnDialogShowListener> getDialogShowObservable() {
         return mDialogShowObservable;
     }
 
-    private boolean shouldIgnorePermission(String permission) {
+    private boolean shouldIgnorePermission(String permission, boolean afterCheck) {
         if (TextUtils.isEmpty(permission)) {
             return false;
         }
         boolean ignore = false;
-        for (String ignorePermission : mPermissionsToIgnore) {
+        for (String ignorePermission : (!afterCheck ? mPermissionsToIgnore : mPermissionsToIgnoreAfterCheck)) {
             if (permission.equalsIgnoreCase(ignorePermission)) {
                 ignore = true;
                 break;
@@ -154,14 +163,29 @@ public final class PermissionChecker {
         return ignore;
     }
 
-
     public boolean isAllPermissionsChecked() {
-        return PermissionChecker.getInstance().getLastGrantedPermissionsCount() + PermissionChecker.getInstance().getLastDeniedPermissionsCount()
-                == PermissionChecker.getInstance().getPermissionsCount() + PermissionChecker.getInstance().getSpecialPermissionsCount();
+        return getLastGrantedPermissionsCount() + getLastDeniedPermissionsCount() == getPermissionsCount() + getSpecialPermissionsCount();
     }
 
     public boolean isAllPermissionsGranted() {
-        return isAllPermissionsChecked() && (PermissionChecker.getInstance().getLastGrantedPermissionsCount() == PermissionChecker.getInstance().getPermissionsCount() + PermissionChecker.getInstance().getSpecialPermissionsCount());
+        if (isAllPermissionsChecked()) {
+            int ignoreCount = 0;
+            for (String ignorePermission : mPermissionsToIgnoreAfterCheck) {
+                if (getLastDeniedPermissions().contains(ignorePermission)) {
+                    ignoreCount++;
+                }
+            }
+            return getLastGrantedPermissionsCount() + ignoreCount == getPermissionsCount() + getSpecialPermissionsCount();
+        }
+        return false;
+    }
+
+    public boolean hasPermissionsToIgnore() {
+        return !mPermissionsToIgnore.isEmpty();
+    }
+
+    public boolean hasPermissionsToIgnoreAfterCheck() {
+        return !mPermissionsToIgnoreAfterCheck.isEmpty();
     }
 
     public boolean hasPermissions() {
@@ -333,13 +357,13 @@ public final class PermissionChecker {
 
             boolean granted = PermissionUtils.isPermissionGranted(requestCode, requestCode, grantResults, 0);
             if (!granted) {
-                handlePermissionDenied(permission, true);
+                handlePermissionDenied(permission, !shouldIgnorePermission(permission, true));
             } else {
-                handlePermissionGranted(permission, true);
+                handlePermissionGranted(permission, !shouldIgnorePermission(permission, true));
             }
 
             return granted && (mShowAllSystemDialogs ||
-                    (!isAllPermissionsChecked()? requestAppPermissions(false, permissionsRequestCodes(false).entrySet()) : isAllPermissionsGranted())); // remove already checked permissions
+                    (!isAllPermissionsChecked() ? requestAppPermissions(false, permissionsRequestCodes(false).entrySet()) : isAllPermissionsGranted())); // remove already checked permissions
         }
     }
 
@@ -370,11 +394,13 @@ public final class PermissionChecker {
             }
             for (String special : mSpecialPermissions) {
                 if (isSpecial(special)) {
-                    if (PermissionUtils.hasCanWriteSettingsPermission(mActivity)) {
-                        handlePermissionGranted(special, false);
-                    } else {
-                        handlePermissionDenied(special, false);
-                        has = false;
+                    if (PermissionUtils.PERMISSION_WRITE_SETTINGS.equals(special)) {
+                        if (PermissionUtils.hasCanWriteSettingsPermission(mActivity)) {
+                            handlePermissionGranted(special, false);
+                        } else {
+                            handlePermissionDenied(special, false);
+                            has = false;
+                        }
                     }
                 } else {
                     throw new RuntimeException("unknown special permission: " + special);
