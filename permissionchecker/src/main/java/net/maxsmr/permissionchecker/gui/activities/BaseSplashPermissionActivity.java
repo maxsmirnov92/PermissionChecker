@@ -126,13 +126,13 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
         }
     }
 
-    private void requestPermissions() {
+    protected void requestPermissions() {
         if (isCheckingPermissionsEnabled) {
             dismissAndClearGrantedDialogs();
             dismissAndClearDeniedDialogs();
             if (!PermissionChecker.getInstance().checkAppPermissions()) {
                 PermissionChecker.getInstance().requestAppPermissions();
-            } else if (isSplashTimeouted) {
+            } else if (isFinalActionAllowed()) {
                 doFinalAction();
             }
         }

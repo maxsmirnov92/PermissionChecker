@@ -428,24 +428,25 @@ public final class PermissionChecker {
             boolean result = false;
             boolean systemDialogShowed = false;
             for (Map.Entry<String, Integer> entry : permissionsRequestCodes) {
-                boolean has = PermissionUtils.has(mActivity, entry.getKey());
+                String permission = entry.getKey();
+                boolean has = PermissionUtils.has(mActivity, permission);
                 PermissionUtils.PermissionResponse response = !has && (!systemDialogShowed || mShowAllSystemDialogs) ?
-                        PermissionUtils.requestRuntimePermission(mActivity, entry.getKey(), entry.getValue()) :
-                        (has ? new PermissionUtils.PermissionResponse(entry.getKey(), entry.getValue(), true, true) : null);
+                        PermissionUtils.requestRuntimePermission(mActivity, permission, entry.getValue()) :
+                        (has ? new PermissionUtils.PermissionResponse(permission, entry.getValue(), true, true) : null);
                 if (response != null) {
                     result = true;
                     if (!response.hasPermission && !response.isDialogShown) {
                         result = false;
-                        handlePermissionDenied(entry.getKey(), true);
+                        handlePermissionDenied(permission, !shouldIgnorePermission(permission, true));
                     } else {
                         if (!response.hasPermission) {
                             systemDialogShowed = true;
                             result = false;
                         } else {
-                            handlePermissionGranted(entry.getKey(), true);
+                            handlePermissionGranted(permission, !shouldIgnorePermission(permission, true));
                         }
                     }
-                    mCheckedPermissions.add(entry.getKey());
+                    mCheckedPermissions.add(permission);
                 }
             }
             for (String special : mSpecialPermissions) {
