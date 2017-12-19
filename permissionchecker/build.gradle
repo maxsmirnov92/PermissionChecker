@@ -3,15 +3,10 @@ buildscript {
         jcenter()
     }
     dependencies {
-//        classpath 'com.android.tools.build:gradle:2.3.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
     }
 }
-
-//plugins {
-//    id "com.jfrog.bintray" version "1.7.3"
-//}
 
 repositories {
     jcenter()
@@ -19,18 +14,13 @@ repositories {
 
 apply plugin: 'com.android.library'
 
-//apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
-def groupIdName = "net.maxsmr"
-def artifactVersionName = "1.1"
-
 def siteUrl = 'https://github.com/maxsmirnov92/PermissionChecker'
 def gitUrl = 'https://github.com/maxsmirnov92/PermissionChecker.git'
 
-//def releaseDir = "${buildDir}/release"
 def localReleaseDest = project.hasProperty("LOCAL_REPO") ? "${rootProject.projectDir}/${project.LOCAL_REPO}" : "${rootProject.buildDir}/release/repo"
 
 android {
@@ -42,17 +32,17 @@ android {
         }
     }
 
-    compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    compileSdkVersion sdkVersion
+    buildToolsVersion buildToolsVersion_
 
     sourceCompatibility = 1.7
     targetCompatibility = 1.7
 
     defaultConfig {
-        minSdkVersion 10
-        targetSdkVersion 25
+        minSdkVersion minSdkVersion_
+        targetSdkVersion sdkVersion
         versionCode 1
-        versionName artifactVersionName
+        versionName permissionCheckerVersion
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -83,23 +73,12 @@ configurations {
     javadocDependencies
 }
 
-//task javadoc(type: Javadoc) {
-//    source = android.sourceSets.main.java.srcDirs
-//    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-//}
-
-//task javaDocsJar(type: Jar, dependsOn: javaDocs) {
-//    classifier = 'javadoc'
-//    from javaDocs.destinationDir
-//}
-
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from android.sourceSets.main.java.srcDirs
 }
 
 artifacts {
-//    archives javadocJar
     archives sourcesJar
 }
 
@@ -107,14 +86,14 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
 
-    compile 'com.android.support:appcompat-v7:25.3.1'
+    implementation "com.android.support:appcompat-v7:$appCompatVersion"
 }
 
 uploadArchives {
     repositories.mavenDeployer {
         pom.groupId = groupIdName
         pom.artifactId = project.archivesBaseName
-        pom.version = artifactVersionName
+        pom.version = permissionCheckerVersion
         repository(url: "file://${localReleaseDest}")
     }
 }
@@ -134,7 +113,7 @@ bintray {
         licenses = ['Apache-2.0']
         vcsUrl = gitUrl
         version {
-            name = artifactVersionName
+            name = permissionCheckerVersion
         }
         publicDownloadNumbers = true
     }
@@ -145,10 +124,9 @@ publishing {
         artifactPublication(MavenPublication) {
             groupId = groupIdName
             artifactId = project.archivesBaseName
-            version = artifactVersionName
+            version = permissionCheckerVersion
             artifact "${project.buildDir}/outputs/aar/${archivesBaseName}-release.aar"
             artifact sourcesJar
-//            artifact javadocsJar
 
             pom.withXml {
                 def dependenciesNode = asNode().appendNode('dependencies')
