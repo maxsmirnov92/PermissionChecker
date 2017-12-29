@@ -29,7 +29,7 @@ ext {
     appCompatVersion = buildToolsVersion_
 
     groupIdName = "net.maxsmr"
-    permissionCheckerVersion = "1.1"
+    permissionCheckerVersion = "1.1.1"
 }
 
 task clean(type: Delete) {

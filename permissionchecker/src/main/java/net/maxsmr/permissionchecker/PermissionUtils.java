@@ -7,11 +7,16 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 public final class PermissionUtils {
 
@@ -34,6 +39,19 @@ public final class PermissionUtils {
         return true;
     }
 
+    public static boolean hasUnhandledPermissions(Collection<PermissionUtils.PermissionResponse> responses) {
+        boolean has = false;
+        if (responses != null) {
+            for (PermissionUtils.PermissionResponse response : responses) {
+                if (response != null && !response.hasPermission && response.isDialogShown) {
+                    has = true;
+                    break;
+                }
+            }
+        }
+        return has;
+    }
+
     public static boolean isPermissionGranted(int requestCode, int requiringRequestCode, int[] grantResults, int permissionIndex) {
 
         if (permissionIndex < 0) {
@@ -50,6 +68,7 @@ public final class PermissionUtils {
         return result;
     }
 
+    /** one request code - single permission */
     @NonNull
     public static PermissionResponse requestRuntimePermission(@NonNull Activity activity, String permission, int requestCode) {
         if (!has(activity, permission)) {
@@ -64,6 +83,38 @@ public final class PermissionUtils {
         } else {
             return new PermissionResponse(permission, requestCode, true, false);
         }
+    }
+
+    /** one request code - multiple permissions */
+    @NonNull
+    public static Map<String, PermissionResponse> requestRuntimePermissions(@NonNull Activity activity, Collection<String> permissions, int requestCode) {
+        Map<String, PermissionUtils.PermissionResponse> responseMap = new LinkedHashMap<>();
+        if (permissions != null) {
+            for (String permission : permissions) {
+                if (!TextUtils.isEmpty(permission)) {
+                    if (!has(activity, permission)) {
+                        if (!ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
+                            responseMap.put(permission, new PermissionUtils.PermissionResponse(permission, requestCode, false, true));
+                        } else {
+                            responseMap.put(permission, new PermissionUtils.PermissionResponse(permission, requestCode, false, false));
+                        }
+                    } else {
+                        responseMap.put(permission, new PermissionUtils.PermissionResponse(permission, requestCode, true, false));
+                    }
+                }
+            }
+        }
+        Set<String> permissionsToRequest = new LinkedHashSet<>();
+        for (PermissionUtils.PermissionResponse response : responseMap.values()) {
+            if (!response.hasPermission && response.isDialogShown) {
+                permissionsToRequest.add(response.permission);
+            }
+        }
+        ActivityCompat.requestPermissions(activity,
+                permissionsToRequest.toArray(new String[permissionsToRequest.size()]),
+                requestCode);
+
+        return responseMap;
     }
 
     public static void requestCanWriteSettingsPermission(@NonNull Context context) {
