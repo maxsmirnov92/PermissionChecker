@@ -72,7 +72,7 @@ public final class PermissionUtils {
     @NonNull
     public static PermissionResponse requestRuntimePermission(@NonNull Activity activity, String permission, int requestCode) {
         if (!has(activity, permission)) {
-            if (!ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
+            if (!TextUtils.isEmpty(permission) && !ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
                 ActivityCompat.requestPermissions(activity,
                         new String[]{permission},
                         requestCode);
@@ -110,10 +110,11 @@ public final class PermissionUtils {
                 permissionsToRequest.add(response.permission);
             }
         }
-        ActivityCompat.requestPermissions(activity,
-                permissionsToRequest.toArray(new String[permissionsToRequest.size()]),
-                requestCode);
-
+        if (!permissionsToRequest.isEmpty()) {
+            ActivityCompat.requestPermissions(activity,
+                    permissionsToRequest.toArray(new String[permissionsToRequest.size()]),
+                    requestCode);
+        }
         return responseMap;
     }
 
