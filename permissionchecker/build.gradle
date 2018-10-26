@@ -35,8 +35,8 @@ android {
     compileSdkVersion sdkVersion
     buildToolsVersion buildToolsVersion_
 
-    sourceCompatibility = 1.7
-    targetCompatibility = 1.7
+    sourceCompatibility = sourceCompatibilityVersion
+    targetCompatibility = sourceCompatibilityVersion
 
     defaultConfig {
         minSdkVersion minSdkVersion_
@@ -56,8 +56,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     lintOptions {
         // Don't abort if Lint finds an error, otherwise the Jenkins build
@@ -84,9 +84,7 @@ artifacts {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    testCompile 'junit:junit:4.12'
-
-    api "com.android.support:appcompat-v7:$appCompatVersion"
+    api "com.android.support:appcompat-v7:$supportLibraryVersion"
 }
 
 uploadArchives {
