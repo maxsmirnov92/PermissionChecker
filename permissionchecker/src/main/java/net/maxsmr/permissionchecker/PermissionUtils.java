@@ -4,10 +4,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,11 +28,28 @@ public final class PermissionUtils {
         throw new AssertionError("no instances.");
     }
 
-    public static boolean has(@NonNull Context context, String permission) {
+    public static boolean has(@NotNull Context context, String permission) {
         return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED;
     }
 
-    public static boolean hasCanWriteSettingsPermission(@NonNull Context context) {
+    public static boolean hasPermissions(@NotNull Context context, @Nullable Set<String> permissions, boolean has) {
+        return hasPermissionsWithNames(context, permissions, has).size() == (permissions != null? permissions.size() : 0);
+    }
+
+    @NotNull
+    public static Set<String> hasPermissionsWithNames(@NotNull Context context, @Nullable Set<String> permissions, boolean has) {
+        Set<String> result = new LinkedHashSet<>();
+        if (permissions != null) {
+            for (String p : permissions) {
+                if (PermissionUtils.has(context, p) == has) {
+                    result.add(p);
+                }
+            }
+        }
+        return result;
+    }
+
+    public static boolean hasCanWriteSettingsPermission(@NotNull Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!android.provider.Settings.System.canWrite(context)) {
                 return false;
@@ -39,17 +58,48 @@ public final class PermissionUtils {
         return true;
     }
 
-    public static boolean hasUnhandledPermissions(Collection<PermissionUtils.PermissionResponse> responses) {
-        boolean has = false;
+    @NotNull
+    public static Set<String> getPermissionNames(@Nullable Collection<PermissionResponse> responses) {
+        Set<String> permissions = new LinkedHashSet<>();
         if (responses != null) {
-            for (PermissionUtils.PermissionResponse response : responses) {
-                if (response != null && !response.hasPermission && response.isDialogShown) {
-                    has = true;
-                    break;
+            for (PermissionResponse r : responses) {
+                if (r != null) {
+                    permissions.add(r.permission);
                 }
             }
         }
-        return has;
+        return permissions;
+    }
+
+    @NotNull
+    public static Set<PermissionResponse> filterPermissions(@Nullable Collection<PermissionResponse> responses, boolean isGranted, boolean isDialogShown) {
+        Set<PermissionResponse> filteredPermissions = new LinkedHashSet<>();
+        if (responses != null) {
+            for (PermissionResponse response : responses) {
+                if (response != null && response.hasPermission == isGranted && response.isDialogShown == isDialogShown) {
+                    filteredPermissions.add(response);
+                }
+            }
+        }
+        return filteredPermissions;
+    }
+
+    public static boolean hasNonGrantedPermissions(@Nullable Collection<PermissionResponse> responses) {
+        return !getNonGrantedPermissions(responses).isEmpty();
+    }
+
+    @NotNull
+    public static Set<PermissionResponse> getNonGrantedPermissions(@Nullable Collection<PermissionResponse> responses) {
+        return filterPermissions(responses, false, false);
+    }
+
+    public static boolean hasUnhandledPermissions(@Nullable Collection<PermissionResponse> responses) {
+        return !getUnhandledPermissions(responses).isEmpty();
+    }
+
+    @NotNull
+    public static Set<PermissionResponse> getUnhandledPermissions(@Nullable Collection<PermissionResponse> responses) {
+        return filterPermissions(responses, false, true);
     }
 
     public static boolean isPermissionGranted(int requestCode, int requiringRequestCode, int[] grantResults, int permissionIndex) {
@@ -69,8 +119,8 @@ public final class PermissionUtils {
     }
 
     /** one request code - single permission */
-    @NonNull
-    public static PermissionResponse requestRuntimePermission(@NonNull Activity activity, String permission, int requestCode) {
+    @NotNull
+    public static PermissionResponse requestRuntimePermission(@NotNull Activity activity, String permission, int requestCode) {
         if (!has(activity, permission)) {
             if (!TextUtils.isEmpty(permission) && !ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
                 ActivityCompat.requestPermissions(activity,
@@ -86,8 +136,8 @@ public final class PermissionUtils {
     }
 
     /** one request code - multiple permissions */
-    @NonNull
-    public static Map<String, PermissionResponse> requestRuntimePermissions(@NonNull Activity activity, Collection<String> permissions, int requestCode) {
+    @NotNull
+    public static Map<String, PermissionResponse> requestRuntimePermissions(@NotNull Activity activity, Collection<String> permissions, int requestCode) {
         Map<String, PermissionUtils.PermissionResponse> responseMap = new LinkedHashMap<>();
         if (permissions != null) {
             for (String permission : permissions) {
@@ -118,7 +168,7 @@ public final class PermissionUtils {
         return responseMap;
     }
 
-    public static void requestCanWriteSettingsPermission(@NonNull Context context) {
+    public static void requestCanWriteSettingsPermission(@NotNull Context context) {
         if (!hasCanWriteSettingsPermission(context)) {
             PackageHelper.openAppManageSettingsScreen(context);
         }

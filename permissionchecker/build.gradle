@@ -84,7 +84,12 @@ artifacts {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Support library
     api "com.android.support:appcompat-v7:$supportLibraryVersion"
+
+    // Jetbrains annotations
+    api "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
 }
 
 uploadArchives {

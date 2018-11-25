@@ -3,8 +3,6 @@ package net.maxsmr.permission.test;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -12,6 +10,9 @@ import android.widget.TextView;
 
 import net.maxsmr.permissionchecker.PackageHelper;
 import net.maxsmr.permissionchecker.PermissionChecker;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Stack;
@@ -30,7 +31,7 @@ public class TestPermissionsActivity extends AppCompatActivity implements Permis
     private boolean isExitOnPositiveClickSet = false;
     private boolean isSettingsScreenShowedOnce = false;
 
-    @NonNull
+    @NotNull
     private Dialog createPermissionAlertDialog(String permission, final boolean granted, DialogInterface.OnClickListener positiveClickListener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(
@@ -56,7 +57,7 @@ public class TestPermissionsActivity extends AppCompatActivity implements Permis
         return builder.create();
     }
 
-    @NonNull
+    @NotNull
     private Dialog createNoPermissionsAlertDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.dialog_message_permissions_empty)
@@ -82,7 +83,7 @@ public class TestPermissionsActivity extends AppCompatActivity implements Permis
         isExitOnPositiveClickSet = false;
     }
 
-    private void dismissDialogs(@NonNull Stack<Dialog> dialogs) {
+    private void dismissDialogs(@NotNull Stack<Dialog> dialogs) {
         while (!dialogs.isEmpty()) {
             Dialog d = dialogs.pop();
             if (d != null && d.isShowing()) {
@@ -144,7 +145,7 @@ public class TestPermissionsActivity extends AppCompatActivity implements Permis
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NotNull String[] permissions, @NotNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Log.d(TestPermissionsActivity.class.getSimpleName(), "onRequestPermissionsResult: requestCode=" + requestCode + ", permissions=" + Arrays.toString(permissions) + ", grantResults=" + Arrays.toString(grantResults));
         /*boolean result = */PermissionChecker.getInstance().onRequestPermissionsResult(requestCode, permissions, grantResults);

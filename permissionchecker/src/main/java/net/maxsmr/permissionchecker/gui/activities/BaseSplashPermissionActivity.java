@@ -5,13 +5,14 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.MainThread;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 
 import net.maxsmr.permissionchecker.PackageHelper;
 import net.maxsmr.permissionchecker.PermissionChecker;
 import net.maxsmr.permissionchecker.R;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -59,7 +60,7 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
         return grantedDialogs.isEmpty() && isSplashTimeouted && (!isCheckingPermissionsEnabled || PermissionChecker.getInstance().isAllPermissionsGranted());
     }
 
-    @NonNull
+    @NotNull
     private Dialog createPermissionAlertDialog(final String permission, final boolean granted, DialogInterface.OnClickListener positiveClickListener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(
@@ -99,7 +100,7 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
         deniedDialogs.clear();
     }
 
-    private void dismissDialogs(@NonNull Stack<Dialog> dialogs) {
+    private void dismissDialogs(@NotNull Stack<Dialog> dialogs) {
         while (!dialogs.isEmpty()) {
             Dialog d = dialogs.pop();
             if (d != null && d.isShowing()) {
@@ -182,7 +183,7 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
 
     @Override
     @CallSuper
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NotNull String[] permissions, @NotNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (isCheckingPermissionsEnabled) {
             if (PermissionChecker.getInstance().onRequestPermissionsResult(requestCode, permissions, grantResults)) {

@@ -1,7 +1,7 @@
 package net.maxsmr.permission.test;
 
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import android.view.View;
 import android.widget.Toast;
 

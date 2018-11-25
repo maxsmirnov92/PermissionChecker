@@ -7,7 +7,8 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,8 +20,8 @@ public final class PackageHelper {
         throw new AssertionError("no instances.");
     }
 
-    @NonNull
-    public static List<String> getPermissionsForPackage(@NonNull Context context, String packageName) {
+    @NotNull
+    public static List<String> getPermissionsForPackage(@NotNull Context context, String packageName) {
         try {
             return getPermissionsForPackageInfo(context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_PERMISSIONS));
         } catch (PackageManager.NameNotFoundException e) {
@@ -29,8 +30,8 @@ public final class PackageHelper {
         }
     }
 
-    @NonNull
-    public static List<String> getPermissionsForArchivePackage(@NonNull Context context, String archivePath) {
+    @NotNull
+    public static List<String> getPermissionsForArchivePackage(@NotNull Context context, String archivePath) {
         try {
             return getPermissionsForPackageInfo(context.getPackageManager().getPackageArchiveInfo(archivePath, PackageManager.GET_PERMISSIONS));
         } catch (Exception e) {
@@ -39,8 +40,8 @@ public final class PackageHelper {
         }
     }
 
-    @NonNull
-    private static List<String> getPermissionsForPackageInfo(@NonNull PackageInfo packageInfo) {
+    @NotNull
+    private static List<String> getPermissionsForPackageInfo(@NotNull PackageInfo packageInfo) {
         List<String> permissions = new ArrayList<>();
         if (packageInfo.requestedPermissions != null) {
             return new ArrayList<>(Arrays.asList(packageInfo.requestedPermissions));
@@ -48,7 +49,7 @@ public final class PackageHelper {
         return permissions;
     }
 
-    public static void openAppSettingsScreen(@NonNull Context context) {
+    public static void openAppSettingsScreen(@NotNull Context context) {
         Intent intent = new Intent();
         intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
         intent.addCategory(Intent.CATEGORY_DEFAULT);
@@ -61,7 +62,7 @@ public final class PackageHelper {
         context.startActivity(intent);
     }
 
-    public static void openAppManageSettingsScreen(@NonNull Context context) {
+    public static void openAppManageSettingsScreen(@NotNull Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             context.startActivity(
                     new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
