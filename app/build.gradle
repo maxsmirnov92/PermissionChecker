@@ -4,7 +4,6 @@ android {
     compileSdkVersion sdkVersion
     buildToolsVersion buildToolsVersion_
 
-
     sourceCompatibility = sourceCompatibilityVersion
     targetCompatibility = sourceCompatibilityVersion
 
