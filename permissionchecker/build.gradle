@@ -1,17 +1,3 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
-    }
-}
-
-repositories {
-    jcenter()
-}
-
 apply plugin: 'com.android.library'
 
 apply plugin: 'com.jfrog.bintray'
@@ -38,15 +24,15 @@ android {
         }
     }
 
-    compileSdkVersion sdkVersion
-    buildToolsVersion buildToolsVersion_
+    compileSdkVersion rootProject.ext.androidSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     sourceCompatibility = sourceCompatibilityVersion
     targetCompatibility = sourceCompatibilityVersion
 
     defaultConfig {
-        minSdkVersion minSdkVersion_
-        targetSdkVersion sdkVersion
+        minSdkVersion androidMinSdkVersion
+        targetSdkVersion androidSdkVersion
         versionCode 1
         versionName permissionCheckerVersion
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

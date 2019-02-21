@@ -12,7 +12,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -28,8 +30,8 @@ public final class PermissionUtils {
         throw new AssertionError("no instances.");
     }
 
-    public static boolean has(@NotNull Context context, String permission) {
-        return ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED;
+    public static boolean has(@NotNull Context context, @Nullable String permission) {
+        return permission != null && ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED;
     }
 
     public static boolean hasPermissions(@NotNull Context context, @Nullable Set<String> permissions, boolean has) {
@@ -41,8 +43,10 @@ public final class PermissionUtils {
         Set<String> result = new LinkedHashSet<>();
         if (permissions != null) {
             for (String p : permissions) {
-                if (PermissionUtils.has(context, p) == has) {
-                    result.add(p);
+                if (!TextUtils.isEmpty(p)) {
+                    if (PermissionUtils.has(context, p) == has) {
+                        result.add(p);
+                    }
                 }
             }
         }
@@ -51,9 +55,7 @@ public final class PermissionUtils {
 
     public static boolean hasCanWriteSettingsPermission(@NotNull Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!android.provider.Settings.System.canWrite(context)) {
-                return false;
-            }
+            return android.provider.Settings.System.canWrite(context);
         }
         return true;
     }
@@ -162,7 +164,7 @@ public final class PermissionUtils {
         }
         if (!permissionsToRequest.isEmpty()) {
             ActivityCompat.requestPermissions(activity,
-                    permissionsToRequest.toArray(new String[permissionsToRequest.size()]),
+                    permissionsToRequest.toArray(new String[0]),
                     requestCode);
         }
         return responseMap;
@@ -172,6 +174,37 @@ public final class PermissionUtils {
         if (!hasCanWriteSettingsPermission(context)) {
             PackageHelper.openAppManageSettingsScreen(context);
         }
+    }
+    public static boolean requestPermissions(@NotNull Activity activity, int requestCode, @Nullable PermissionsRequestCallback callback, String... permissions) {
+        final List<String> permissionsList = permissions != null? Arrays.asList(permissions) : Collections.emptyList();
+        final Map<String, PermissionResponse> responses = PermissionUtils.requestRuntimePermissions(activity, permissionsList, requestCode);
+        final Set<PermissionResponse> notHandledPermissions = PermissionUtils.getUnhandledPermissions(responses.values());
+        final boolean hasNotHandledPermissions = !notHandledPermissions.isEmpty();
+        final Set<PermissionResponse> notGrantedPermissions = PermissionUtils.getNonGrantedPermissions(responses.values());
+        if ((!hasNotHandledPermissions && notGrantedPermissions.isEmpty())) {
+            if (callback != null) {
+                return callback.onPermissionsGranted(permissionsList);
+            }
+            return true;
+        } else if (!hasNotHandledPermissions) {
+            if (callback != null) {
+                callback.onPermissionsNotGranted(PermissionUtils.getPermissionNames(notGrantedPermissions));
+            }
+        } else {
+            if (callback != null) {
+                callback.onPermissionsNotHandled(PermissionUtils.getPermissionNames(notHandledPermissions));
+            }
+        }
+        return false;
+    }
+
+    public interface PermissionsRequestCallback {
+
+        boolean onPermissionsGranted(@NotNull List<String> permissions);
+
+        void onPermissionsNotGranted(@NotNull Set<String> permissions);
+
+        void onPermissionsNotHandled(@NotNull Set<String> permissions);
     }
 
     static int generateRequestCode(Collection<Integer> usedCodes) {
@@ -189,7 +222,7 @@ public final class PermissionUtils {
         return newCode;
     }
 
-    static int randInt(int min, int max) {
+    private static int randInt(int min, int max) {
         Random rand = new Random();
         return rand.nextInt((max - min) + 1) + min;
     }
@@ -231,6 +264,7 @@ public final class PermissionUtils {
             return result;
         }
 
+        @NotNull
         @Override
         public String toString() {
             return "PermissionResponse{" +

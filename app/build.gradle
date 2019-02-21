@@ -1,16 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion sdkVersion
-    buildToolsVersion buildToolsVersion_
+    compileSdkVersion rootProject.ext.androidSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     sourceCompatibility = sourceCompatibilityVersion
     targetCompatibility = sourceCompatibilityVersion
 
     defaultConfig {
         applicationId "net.maxsmr.permission.test"
-        minSdkVersion minSdkVersion_
-        targetSdkVersion sdkVersion
+        minSdkVersion androidMinSdkVersion
+        targetSdkVersion androidSdkVersion
         versionCode 1
         versionName "1.0"
     }
