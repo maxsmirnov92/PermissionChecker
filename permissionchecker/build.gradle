@@ -2,5 +2,12 @@ apply from: "$rootDir/buildSrc/androidLib.gradle"
 
 dependencies {
 
+    // Jetbrains annotations
+    api "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+
+    // Support
+    api "androidx.annotation:annotation:$androidXAnnotationVersion"
+    api "androidx.core:core-ktx:$androidXAnnotationVersion"
+
     api "com.google.android.material:material:$androidXVersion"
 }
