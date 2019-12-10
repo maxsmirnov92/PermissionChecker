@@ -1,0 +1,7 @@
+apply from: "$rootDir/buildSrc/androidApp.gradle"
+
+dependencies {
+
+//    implementation project(':permissionchecker')
+    implementation "net.maxsmr:permissionchecker:${project.getModuleVersionNameByPath(":permissionchecker")}"
+}

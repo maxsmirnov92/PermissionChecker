@@ -3,10 +3,11 @@ package net.maxsmr.permission.test;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import net.maxsmr.permissionchecker.PackageHelper;
 import net.maxsmr.permissionchecker.PermissionChecker;

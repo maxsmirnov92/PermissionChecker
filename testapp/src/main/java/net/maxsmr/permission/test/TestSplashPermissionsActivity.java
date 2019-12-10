@@ -62,4 +62,10 @@ public class TestSplashPermissionsActivity extends BaseSplashPermissionActivity 
     protected Collection<String> getPermissionsToIgnore() {
         return null;
     }
+
+    @Nullable
+    @Override
+    protected Collection<String> getPermissionsToIgnoreAfterCheck() {
+        return null;
+    }
 }

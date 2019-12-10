@@ -7,11 +7,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import org.jetbrains.annotations.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
+import org.jetbrains.annotations.Nullable;
 
 public abstract class BaseSplashActivity extends AppCompatActivity {
 
@@ -21,7 +21,7 @@ public abstract class BaseSplashActivity extends AppCompatActivity {
     private final Runnable navigateRunnable = new Runnable() {
         @Override
         public void run() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && !isDestroyed() || Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1 || !isDestroyed()) {
                 onSplashTimeout();
             }
             isNavigateRunnableScheduled = false;
@@ -58,12 +58,9 @@ public abstract class BaseSplashActivity extends AppCompatActivity {
     private void init() {
         View clickableView = getClickableView();
         if (clickableView != null && clickableView.isClickable()) {
-            clickableView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    navigateHandler.removeCallbacks(navigateRunnable);
-                    onSplashTimeout();
-                }
+            clickableView.setOnClickListener(v -> {
+                navigateHandler.removeCallbacks(navigateRunnable);
+                onSplashTimeout();
             });
         }
     }

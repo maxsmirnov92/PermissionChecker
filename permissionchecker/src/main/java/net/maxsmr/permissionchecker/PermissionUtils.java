@@ -4,9 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -176,14 +177,14 @@ public final class PermissionUtils {
         }
     }
     public static boolean requestPermissions(@NotNull Activity activity, int requestCode, @Nullable PermissionsRequestCallback callback, String... permissions) {
-        final List<String> permissionsList = permissions != null? Arrays.asList(permissions) : Collections.emptyList();
-        final Map<String, PermissionResponse> responses = PermissionUtils.requestRuntimePermissions(activity, permissionsList, requestCode);
-        final Set<PermissionResponse> notHandledPermissions = PermissionUtils.getUnhandledPermissions(responses.values());
+        final Set<String> permissionsSet = permissions != null? new LinkedHashSet<>(Arrays.asList(permissions)) : Collections.emptySet();
+        final Map<String, PermissionResponse> responses = requestRuntimePermissions(activity, permissionsSet, requestCode);
+        final Set<PermissionResponse> notHandledPermissions = getUnhandledPermissions(responses.values());
         final boolean hasNotHandledPermissions = !notHandledPermissions.isEmpty();
-        final Set<PermissionResponse> notGrantedPermissions = PermissionUtils.getNonGrantedPermissions(responses.values());
+        final Set<PermissionResponse> notGrantedPermissions = getNonGrantedPermissions(responses.values());
         if ((!hasNotHandledPermissions && notGrantedPermissions.isEmpty())) {
             if (callback != null) {
-                return callback.onPermissionsGranted(permissionsList);
+                return callback.onPermissionsGranted(permissionsSet);
             }
             return true;
         } else if (!hasNotHandledPermissions) {
@@ -200,7 +201,7 @@ public final class PermissionUtils {
 
     public interface PermissionsRequestCallback {
 
-        boolean onPermissionsGranted(@NotNull List<String> permissions);
+        boolean onPermissionsGranted(@NotNull Set<String> permissions);
 
         void onPermissionsNotGranted(@NotNull Set<String> permissions);
 

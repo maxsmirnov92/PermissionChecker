@@ -1,11 +1,12 @@
 package net.maxsmr.permissionchecker.gui.activities;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.annotation.CallSuper;
-import android.support.annotation.MainThread;
-import android.support.v7.app.AlertDialog;
+
+import androidx.annotation.CallSuper;
+import androidx.annotation.MainThread;
 
 import net.maxsmr.permissionchecker.PackageHelper;
 import net.maxsmr.permissionchecker.PermissionChecker;
@@ -18,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
-
 
 public abstract class BaseSplashPermissionActivity extends BaseSplashActivity implements PermissionChecker.OnDialogShowListener {
 
@@ -69,21 +69,13 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
                         permission))
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok, positiveClickListener)
-                .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @SuppressWarnings("SuspiciousMethodCalls")
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        if (granted) {
-                            if (grantedDialogs.contains(dialog)) {
-                                grantedDialogs.remove(dialog);
-                            }
-                            onGrantedDialogDismiss(permission, dialog);
-                        } else {
-                            if (deniedDialogs.contains(dialog)) {
-                                deniedDialogs.remove(dialog);
-                            }
-                            onDeniedDialogDismiss(permission, dialog);
-                        }
+                .setOnDismissListener(dialog -> {
+                    if (granted) {
+                        grantedDialogs.remove(dialog);
+                        onGrantedDialogDismiss(permission, dialog);
+                    } else {
+                        deniedDialogs.remove(dialog);
+                        onDeniedDialogDismiss(permission, dialog);
                     }
                 });
         return builder.create();
@@ -264,6 +256,7 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
 
     }
 
+    @CallSuper
     protected void onGrantedDialogDismiss(String permission, DialogInterface dialog) {
         if (grantedDialogs.isEmpty()) {
             if (isFinalActionAllowed()) {
@@ -272,6 +265,7 @@ public abstract class BaseSplashPermissionActivity extends BaseSplashActivity im
         }
     }
 
+    @CallSuper
     protected void onDeniedDialogDismiss(String permission, DialogInterface dialog) {
         if (deniedDialogs.isEmpty()) {
             openAppSettingsScreen();
