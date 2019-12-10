@@ -35,7 +35,7 @@ android {
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.sdkVersion
-        def module = project.getModuleInfo(project.path)
+        def module = project.getModuleInfoByPath(project.path)
         versionCode project.getModuleVersionCode(module)
         versionName project.getModuleVersionName(module)
         vectorDrawables.useSupportLibrary = true

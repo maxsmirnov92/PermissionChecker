@@ -1,21 +1,21 @@
 [
   {
-    "id": ":permissionchecker",
+    "id": "permissionchecker",
     "type": "lib",
     "versionName": "1.1.3.0",
     "versionCode": 1,
     "stable": true,
     "unstableVersion": 0,
-    "dir": "permissionchecker"
+    "dir": ":permissionchecker"
   },
   {
-    "id": ":testapp",
+    "id": "testapp",
     "type": "app",
     "versionName": "1.0",
     "versionCode": 1,
     "stable": true,
     "unstableVersion": 0,
-    "dir": "testapp",
+    "dir": ":testapp",
     "appId": "net.maxsmr.permission.test"
   }
 ]

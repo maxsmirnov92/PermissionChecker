@@ -20,8 +20,12 @@ ext.getProjectInfo = {
     return new JsonSlurper().parse(new File("$rootDir/projectConfig.json"), 'utf-8')
 }
 
+ext.getModuleVersionNameById = { id ->
+    return getModuleVersionName(getModuleInfoById(id))
+}
+
 ext.getModuleVersionNameByPath = { path ->
-    return getModuleVersionName(getModuleInfo(path))
+    return getModuleVersionName(getModuleInfoByPath(path))
 }
 
 ext.getModuleVersionName = { module ->
@@ -34,7 +38,7 @@ ext.getModuleVersionName = { module ->
         }
     }
     if (version == null || version.isEmpty()) {
-        throw new GradleException("Version name for module with path $path not found")
+        throw new GradleException("Version name for module with with id \"${module.id}\" not found")
     }
     return version
 }
@@ -45,7 +49,7 @@ ext.getModuleVersionCode = { module ->
         version = module.versionCode
     }
     if (version == null) {
-        throw new GradleException("Version code for module with path $path not found")
+        throw new GradleException("Version code for module with id \"${module.id}\" not found")
     }
     return version
 }
@@ -56,12 +60,30 @@ ext.getAppId = { module ->
         appId = module.appId
     }
     if (appId == null || appId.isEmpty()) {
-        throw new GradleException("App ID for module with path $path not found")
+        throw new GradleException("App ID for module with id \"${module.id}\" not found")
     }
     return appId
 }
 
-ext.getModuleInfo = { path ->
+// id may not be equal to path, but path is unique
+ext.getModuleInfoById = { id ->
+    if (id.isEmpty()) return ""
+    def modules = new JsonSlurper().parse(new File("$rootDir/modules.json"), 'utf-8')
+    def result = null
+    modules.each { module ->
+        if (module.id == id) {
+            result = module
+            return true
+        }
+    }
+    if (result == null) {
+        throw new GradleException("Module with id \"$id\" not found")
+    }
+    return result
+}
+
+// gradle project.path contains ':'; is unique in rootProject
+ext.getModuleInfoByPath = { path ->
     if (path.isEmpty()) return ""
 //    def lastIndex = path.lastIndexOf("/")
 //    def lastPathSegment
@@ -73,13 +95,13 @@ ext.getModuleInfo = { path ->
     def modules = new JsonSlurper().parse(new File("$rootDir/modules.json"), 'utf-8')
     def result = null
     modules.each { module ->
-        if (module.id == path) {
+        if (module.dir == path) {
             result = module
             return true
         }
     }
     if (result == null) {
-        throw new GradleException("Module with id $path not found")
+        throw new GradleException("Module with path \"$path\" not found")
     }
     return result
 }
@@ -98,7 +120,7 @@ ext.getCurrentFlavorOrVariant = { isFlavor ->
     Matcher matcher = pattern.matcher(tskReqStr)
 
     if (matcher.find()) {
-        def result = matcher.group(isFlavor? 1 : 2).toLowerCase()
+        def result = matcher.group(isFlavor ? 1 : 2).toLowerCase()
         return result
     } else {
         throw new GradleException("No flavor/variant match found")
