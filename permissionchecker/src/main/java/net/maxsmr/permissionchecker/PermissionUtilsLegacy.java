@@ -23,11 +23,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-public final class PermissionUtils {
+@Deprecated
+public final class PermissionUtilsLegacy {
 
     public static final String PERMISSION_WRITE_SETTINGS = "android.permission.WRITE_SETTINGS";
 
-    public PermissionUtils() {
+    public PermissionUtilsLegacy() {
         throw new AssertionError("no instances.");
     }
 
@@ -45,7 +46,7 @@ public final class PermissionUtils {
         if (permissions != null) {
             for (String p : permissions) {
                 if (!TextUtils.isEmpty(p)) {
-                    if (PermissionUtils.has(context, p) == has) {
+                    if (PermissionUtilsLegacy.has(context, p) == has) {
                         result.add(p);
                     }
                 }
@@ -141,24 +142,24 @@ public final class PermissionUtils {
     /** one request code - multiple permissions */
     @NotNull
     public static Map<String, PermissionResponse> requestRuntimePermissions(@NotNull Activity activity, Collection<String> permissions, int requestCode) {
-        Map<String, PermissionUtils.PermissionResponse> responseMap = new LinkedHashMap<>();
+        Map<String, PermissionUtilsLegacy.PermissionResponse> responseMap = new LinkedHashMap<>();
         if (permissions != null) {
             for (String permission : permissions) {
                 if (!TextUtils.isEmpty(permission)) {
                     if (!has(activity, permission)) {
                         if (!ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
-                            responseMap.put(permission, new PermissionUtils.PermissionResponse(permission, requestCode, false, true));
+                            responseMap.put(permission, new PermissionUtilsLegacy.PermissionResponse(permission, requestCode, false, true));
                         } else {
-                            responseMap.put(permission, new PermissionUtils.PermissionResponse(permission, requestCode, false, false));
+                            responseMap.put(permission, new PermissionUtilsLegacy.PermissionResponse(permission, requestCode, false, false));
                         }
                     } else {
-                        responseMap.put(permission, new PermissionUtils.PermissionResponse(permission, requestCode, true, false));
+                        responseMap.put(permission, new PermissionUtilsLegacy.PermissionResponse(permission, requestCode, true, false));
                     }
                 }
             }
         }
         Set<String> permissionsToRequest = new LinkedHashSet<>();
-        for (PermissionUtils.PermissionResponse response : responseMap.values()) {
+        for (PermissionUtilsLegacy.PermissionResponse response : responseMap.values()) {
             if (!response.hasPermission && response.isDialogShown) {
                 permissionsToRequest.add(response.permission);
             }
@@ -189,11 +190,11 @@ public final class PermissionUtils {
             return true;
         } else if (!hasNotHandledPermissions) {
             if (callback != null) {
-                callback.onPermissionsNotGranted(PermissionUtils.getPermissionNames(notGrantedPermissions));
+                callback.onPermissionsNotGranted(PermissionUtilsLegacy.getPermissionNames(notGrantedPermissions));
             }
         } else {
             if (callback != null) {
-                callback.onPermissionsNotHandled(PermissionUtils.getPermissionNames(notHandledPermissions));
+                callback.onPermissionsNotHandled(PermissionUtilsLegacy.getPermissionNames(notHandledPermissions));
             }
         }
         return false;

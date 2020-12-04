@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 
+@Deprecated
 public abstract class BaseSplashPermissionActivity extends BaseSplashActivity implements PermissionChecker.OnDialogShowListener {
 
     private static final String ARG_IS_SETTINGS_SCREEN_SHOWED = BaseSplashPermissionActivity.class.getName() + ".ARG_IS_SETTINGS_SCREEN_SHOWED";

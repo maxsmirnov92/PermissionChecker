@@ -2,12 +2,12 @@ apply from: "$rootDir/buildSrc/androidLib.gradle"
 
 dependencies {
 
-    // Jetbrains annotations
-    api "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-
     // Support
-    api "androidx.annotation:annotation:$androidXAnnotationVersion"
-    api "androidx.core:core-ktx:$androidXAnnotationVersion"
+    api "androidx.core:core-ktx:$androidxCoreVersion"
 
-    api "com.google.android.material:material:$androidXVersion"
+//    api "com.google.android.material:material:$androidXVersion"
+
+    // EasyPermissions
+    implementation "pub.devrel:easypermissions:$easyPermissionsVersion"
+
 }

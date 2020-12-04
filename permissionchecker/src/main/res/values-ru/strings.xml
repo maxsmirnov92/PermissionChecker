@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">PermissionChecker</string>
     <string name="dialog_message_permission_denied">Для корректной работы приложения, требуется получить разрешение %s</string>
     <string name="dialog_message_permission_granted">Разрешение получено %s</string>
     <string name="dialog_message_permissions_empty">Для данного приложения отсутствуют разрешения</string>

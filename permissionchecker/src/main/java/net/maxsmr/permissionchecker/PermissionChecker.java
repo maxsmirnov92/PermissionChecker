@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Deprecated
 public final class PermissionChecker {
 
     public static final int NO_REQUEST_CODE = -1;
@@ -63,7 +64,7 @@ public final class PermissionChecker {
 
     static {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            sSpecialSystemPermissions.add(PermissionUtils.PERMISSION_WRITE_SETTINGS);
+            sSpecialSystemPermissions.add(PermissionUtilsLegacy.PERMISSION_WRITE_SETTINGS);
         }
     }
 
@@ -273,7 +274,7 @@ public final class PermissionChecker {
                 return requestCode;
             }
             Collection<Integer> codes = mPermissionsRequestCodes.values();
-            int newCode = PermissionUtils.generateRequestCode(codes);
+            int newCode = PermissionUtilsLegacy.generateRequestCode(codes);
             mPermissionsRequestCodes.put(permission, newCode);
             return newCode;
         }
@@ -330,7 +331,7 @@ public final class PermissionChecker {
             throw new RuntimeException("unregistered permission with requestCode: " + requestCode);
         }
 
-        boolean granted = PermissionUtils.isPermissionGranted(requestCode, requestCode, grantResults, 0);
+        boolean granted = PermissionUtilsLegacy.isPermissionGranted(requestCode, requestCode, grantResults, 0);
         if (!granted) {
             handlePermissionDenied(permission, !shouldIgnorePermission(permission, true));
         } else {
@@ -355,7 +356,7 @@ public final class PermissionChecker {
         boolean has = true;
         clearCheckedPermissions();
         for (String permission : mPermissionsRequestCodes.keySet()) {
-            if (PermissionUtils.has(mActivity, permission)) {
+            if (PermissionUtilsLegacy.has(mActivity, permission)) {
                 handlePermissionGranted(permission, false);
             } else {
                 handlePermissionDenied(permission, false);
@@ -365,8 +366,8 @@ public final class PermissionChecker {
         }
         for (String special : mSpecialPermissions) {
             if (isSpecial(special)) {
-                if (PermissionUtils.PERMISSION_WRITE_SETTINGS.equals(special)) {
-                    if (PermissionUtils.hasCanWriteSettingsPermission(mActivity)) {
+                if (PermissionUtilsLegacy.PERMISSION_WRITE_SETTINGS.equals(special)) {
+                    if (PermissionUtilsLegacy.hasCanWriteSettingsPermission(mActivity)) {
                         handlePermissionGranted(special, false);
                     } else {
                         handlePermissionDenied(special, false);
@@ -398,10 +399,10 @@ public final class PermissionChecker {
         boolean systemDialogShowed = false;
         for (Map.Entry<String, Integer> entry : permissionsRequestCodes) {
             String permission = entry.getKey();
-            boolean has = PermissionUtils.has(mActivity, permission);
-            PermissionUtils.PermissionResponse response = !has && (!systemDialogShowed || mShowAllSystemDialogs) ?
-                    PermissionUtils.requestRuntimePermission(mActivity, permission, entry.getValue()) :
-                    (has ? new PermissionUtils.PermissionResponse(permission, entry.getValue(), true, true) : null);
+            boolean has = PermissionUtilsLegacy.has(mActivity, permission);
+            PermissionUtilsLegacy.PermissionResponse response = !has && (!systemDialogShowed || mShowAllSystemDialogs) ?
+                    PermissionUtilsLegacy.requestRuntimePermission(mActivity, permission, entry.getValue()) :
+                    (has ? new PermissionUtilsLegacy.PermissionResponse(permission, entry.getValue(), true, true) : null);
             if (response != null) {
                 result = true;
                 if (!response.hasPermission && !response.isDialogShown) {
@@ -420,7 +421,7 @@ public final class PermissionChecker {
         }
         for (String special : mSpecialPermissions) {
             if (isSpecial(special)) {
-                PermissionUtils.requestCanWriteSettingsPermission(mActivity);
+                PermissionUtilsLegacy.requestCanWriteSettingsPermission(mActivity);
             } else {
                 throw new RuntimeException("unknown special permission: " + special);
             }

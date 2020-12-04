@@ -32,20 +32,28 @@ abstract class BaseSignAarTask : DefaultTask() {
         checkFilePathValid(aarPath, "AAR")
     }
 
-    protected fun runScript(script: String) {
-        println("Executing script: $script")
+    // not using String to split because of spaces in paths
+    protected fun runScript(commands: List<String>) {
+        println("Executing script: $commands")
         with(ShellWrapper(enableLogging = enableLogging)) {
-            var jreHome = System.getenv("JRE_HOME") ?: ""
-            if (jreHome.isNotEmpty()) {
-                if (!jreHome.endsWith("/") && !jreHome.endsWith("\\")) {
-                    jreHome += File.separator
+            var jarSignerPath = System.getenv("JARSIGNER_PATH") ?: ""
+            if (jarSignerPath.isEmpty()) {
+                var jreHome = System.getenv("JRE_HOME") ?: ""
+                if (jreHome.isNotEmpty()) {
+                    jreHome = jreHome.appendSeparator()
+                    jreHome += "bin"
+                    jarSignerPath = jreHome
                 }
-                jreHome += "bin"
+            } else {
+                jarSignerPath = jarSignerPath.removeSeparator()
             }
-            this.workingDir = jreHome
-            val commands = script.split(" ")
-            println("commands: $commands")
-            executeCommand(commands.toMutableList(), false)
+            this.workingDir = jarSignerPath
+            val mutableCommands = commands.toMutableList()
+            if (commands.isNotEmpty() && !mutableCommands[0].contains(jarSignerPath)) {
+                mutableCommands[0] = jarSignerPath + File.separator + mutableCommands[0]
+            }
+            println("commands: $mutableCommands")
+            executeCommand(mutableCommands, false)
         }
     }
 
@@ -57,5 +65,19 @@ abstract class BaseSignAarTask : DefaultTask() {
         }
         checkFileValid(keystoreFile, "Keystore file")
         return keystoreFile!!
+    }
+
+    private fun String.appendSeparator(): String {
+        if (!endsWith("/") && !endsWith("\\")) {
+            return this + File.separator
+        }
+        return this
+    }
+
+    private fun String.removeSeparator(): String {
+        if (endsWith("/") || endsWith("\\")) {
+            return substring(0, length - 1)
+        }
+        return this
     }
 }

@@ -5,8 +5,6 @@ import org.gradle.api.tasks.TaskAction
 
 open class SignReleaseAarTask : BaseSignAarTask() {
 
-    private val COMMAND_FORMAT = "jarsigner -keystore %s -storepass %s -keypass %s -signedjar %s -verbose %s %s"
-
     @TaskAction
     fun sign() {
         checkArgs()
@@ -21,12 +19,17 @@ open class SignReleaseAarTask : BaseSignAarTask() {
         checkNotEmpty(newAarPath, "New AAR path")
 
         runScript(
-                String.format(
-                        COMMAND_FORMAT,
+                listOf(
+                        "jarsigner",
+                        "-keystore",
                         getKeystoreFile().absolutePath,
+                        "-storepass",
                         keystorePassword,
+                        "-keypass",
                         keystorePassword,
+                        "-signedjar",
                         newAarPath,
+                        "-verbose",
                         aarPath,
                         keystoreAlias
                 )

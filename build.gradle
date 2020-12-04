@@ -4,6 +4,10 @@ buildscript {
 
     apply from: 'buildSrc/config.gradle'
 
+    ext {
+        easyPermissionsVersion = '3.0.0'
+    }
+
     repositories {
         jcenter()
         google()
