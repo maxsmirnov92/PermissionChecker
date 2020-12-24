@@ -11,17 +11,38 @@ import android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
 import androidx.fragment.app.Fragment
 import pub.devrel.easypermissions.EasyPermissions
 
+@JvmOverloads
+fun checkAndRequestPermissionsStorage(
+        obj: Any,
+        rationale: String,
+        requestCode: Int,
+        perms: List<String>,
+        manageAllFilesIfR: Boolean = false,
+        rationaleHandler: BasePermissionsRationaleHandler,
+        targetAction: (() -> Unit)? = null,
+): PermissionHandle? = checkAndRequestPermissionsStorage(
+        obj,
+        rationale,
+        requestCode,
+        perms,
+        manageAllFilesIfR,
+        {
+            rationaleHandler.displayRationalePermissionDialog(it.callObj, it.rationaleMessage, it.perms, true)
+        },
+        targetAction)
+
 /**
  * Дополнительный запрос на запись (через intent), начиная с 30-ого апи,
  * если в разрешение на запись считается получанным и manageAllFilesIfR = true
  *
- * Также исключение [WRITE_EXTERNAL_STORAGE] из списка запрашиваемых при необходимости
+ * Также исключение [WRITE_EXTERNAL_STORAGE], [READ_EXTERNAL_STORAGE] из списка запрашиваемых при необходимости
  *
+ * @param rationaleAction действие с показом диалога при SDK_INT == 28
  * @return объект, в который надо отчитаться о результате (опционально; если manageAllFilesIfR = true)
  * или null, если дальнейшая обработка не требуется - целевое действие выполнено
  */
 @JvmOverloads
-fun checkAndRequestPermissionsWriteStorage(
+fun checkAndRequestPermissionsStorage(
         obj: Any,
         rationale: String,
         requestCode: Int,
@@ -31,7 +52,7 @@ fun checkAndRequestPermissionsWriteStorage(
         targetAction: (() -> Unit)? = null,
 ): PermissionHandle? {
     val handle = PermissionHandleImpl(obj, rationale, requestCode, perms, manageAllFilesIfR, rationaleAction, targetAction)
-    return if (handle.checkAndRequestPermissionsWriteStorage()) {
+    return if (handle.checkAndRequestPermissionsStorage()) {
         null
     } else {
         handle
@@ -70,7 +91,7 @@ private class PermissionHandleImpl(
 
     override fun onActivityResult(requestCode: Int, resultCode: Int): Boolean {
         if (this.requestCode == requestCode && resultCode == Activity.RESULT_OK) {
-            return checkAndRequestPermissionsWriteStorage()
+            return checkAndRequestPermissionsStorage()
         }
         return false
     }
@@ -84,7 +105,7 @@ private class PermissionHandleImpl(
     }
 
     override fun onAfterPermissionGranted(): Boolean =
-            checkAndRequestPermissionsWriteStorage()
+            checkAndRequestPermissionsStorage()
 
     @TargetApi(Build.VERSION_CODES.R)
     fun startManageAllFilesActivity() {
@@ -97,7 +118,7 @@ private class PermissionHandleImpl(
         }
     }
 
-    fun checkAndRequestPermissionsWriteStorage(): Boolean {
+    fun checkAndRequestPermissionsStorage(): Boolean {
         var result = false
         val filteredPermissions: List<String>
         // TODO проблема не решена на == 26-ом - hasPermissions на запись всегда false, а без него не работает (EasyPermissions также не юзаем, кидаем в настройки)

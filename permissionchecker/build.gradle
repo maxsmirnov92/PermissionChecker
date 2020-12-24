@@ -5,8 +5,6 @@ dependencies {
     // Support
     api "androidx.core:core-ktx:$androidxCoreVersion"
 
-//    api "com.google.android.material:material:$androidXVersion"
-
     // EasyPermissions
     implementation "pub.devrel:easypermissions:$easyPermissionsVersion"
 

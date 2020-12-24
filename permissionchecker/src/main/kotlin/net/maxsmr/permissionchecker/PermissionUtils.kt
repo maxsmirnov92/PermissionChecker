@@ -77,11 +77,12 @@ fun requestPermissions(
         rationaleAction: (RationaleActionParams) -> Unit
 ) {
     if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
+        val rationalePermissions = filterRationalePermissions(obj.asContextOrThrow(), perms.toList())
 //         В Android 8.0 при запросе разрешения [ActivityCompat.requestPermissions] и,
 //         как следствие, [EasyPermissions.requestPermissions] возникает ошибка.
         rationaleAction(RationaleActionParams(obj,
                 rationale,
-                perms))
+                rationalePermissions))
     } else {
         if (obj is Fragment) {
             EasyPermissions.requestPermissions(obj, rationale, requestCode, *perms.toTypedArray())
@@ -97,6 +98,7 @@ fun filterRationalePermissions(context: Context, perms: List<String>): List<Stri
 }
 
 
+@Suppress("DEPRECATION")
 @TargetApi(Build.VERSION_CODES.M)
 fun shouldShowRequestPermissionRationale(obj: Any, perm: String): Boolean {
     return when (obj) {
@@ -159,6 +161,6 @@ internal fun Any.asActivityOrThrow(): Activity {
 
 class RationaleActionParams(
         val callObj: Any,
-        val rationale: String,
+        val rationaleMessage: String,
         val perms: List<String>
 )
