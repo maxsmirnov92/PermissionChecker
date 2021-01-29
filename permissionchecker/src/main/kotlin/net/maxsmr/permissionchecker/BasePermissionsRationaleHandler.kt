@@ -9,13 +9,13 @@ import androidx.annotation.CallSuper
 /**
  * Используется для обработки запроса разрешений для SDK_INT = 28
  */
+@TargetApi(Build.VERSION_CODES.O)
 abstract class BasePermissionsRationaleHandler {
 
     protected var lastCallObj: Any? = null
     protected var lastFinishOnReject: Boolean = false
     protected var lastNegativeAction: (() -> Unit)? = null
 
-    @TargetApi(Build.VERSION_CODES.O)
     @CallSuper
     open fun displayRationalePermissionDialog(
             callObj: Any,

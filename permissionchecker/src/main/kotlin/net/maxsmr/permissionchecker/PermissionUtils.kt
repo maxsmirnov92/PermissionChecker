@@ -13,7 +13,7 @@ fun checkAndRequestPermissions(
         obj: Activity,
         rationale: String,
         requestCode: Int,
-        perms: List<String>,
+        perms: Set<String>,
         rationaleAction: (RationaleActionParams) -> Unit,
         targetAction: (() -> Unit)? = null
 ) = checkAndRequestPermissions(obj as Any, rationale, requestCode, perms, rationaleAction, targetAction)
@@ -23,7 +23,7 @@ fun checkAndRequestPermissions(
         obj: Fragment,
         rationale: String,
         requestCode: Int,
-        perms: List<String>,
+        perms: Set<String>,
         rationaleAction: (RationaleActionParams) -> Unit,
         targetAction: (() -> Unit)? = null
 ) = checkAndRequestPermissions(obj as Any, rationale, requestCode, perms, rationaleAction, targetAction)
@@ -32,7 +32,7 @@ fun checkAndRequestPermissions(
         obj: Any,
         rationale: String,
         requestCode: Int,
-        perms: List<String>,
+        perms: Set<String>,
         rationaleAction: (RationaleActionParams) -> Unit,
         targetAction: (() -> Unit)? = null
 ): Boolean = if (perms.isEmpty() || EasyPermissions.hasPermissions(obj.asContextOrThrow(), *perms.toTypedArray())) {
@@ -53,7 +53,7 @@ fun requestPermissions(
         activity: Activity,
         rationale: String,
         requestCode: Int,
-        perms: List<String>,
+        perms: Set<String>,
         rationaleAction: (RationaleActionParams) -> Unit
 ) {
     requestPermissions(activity as Any, rationale, requestCode, perms, rationaleAction)
@@ -63,7 +63,7 @@ fun requestPermissions(
         fragment: Fragment,
         rationale: String,
         requestCode: Int,
-        perms: List<String>,
+        perms: Set<String>,
         rationaleAction: (RationaleActionParams) -> Unit
 ) {
     requestPermissions(fragment as Any, rationale, requestCode, perms, rationaleAction)
@@ -73,7 +73,7 @@ fun requestPermissions(
         obj: Any,
         rationale: String,
         requestCode: Int,
-        perms: List<String>,
+        perms: Set<String>,
         rationaleAction: (RationaleActionParams) -> Unit
 ) {
     if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {

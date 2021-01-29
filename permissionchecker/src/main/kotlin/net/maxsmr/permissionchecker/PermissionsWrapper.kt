@@ -16,7 +16,7 @@ fun checkAndRequestPermissionsStorage(
         obj: Any,
         rationale: String,
         requestCode: Int,
-        perms: List<String>,
+        perms: Set<String>,
         manageAllFilesIfR: Boolean = false,
         rationaleHandler: BasePermissionsRationaleHandler,
         targetAction: (() -> Unit)? = null,
@@ -46,7 +46,7 @@ fun checkAndRequestPermissionsStorage(
         obj: Any,
         rationale: String,
         requestCode: Int,
-        perms: List<String>,
+        perms: Set<String>,
         manageAllFilesIfR: Boolean = false,
         rationaleAction: (RationaleActionParams) -> Unit,
         targetAction: (() -> Unit)? = null,
@@ -83,7 +83,7 @@ private class PermissionHandleImpl(
         val callObject: Any,
         val rationale: String,
         val requestCode: Int,
-        val perms: List<String>,
+        val perms: Set<String>,
         val manageAllFilesIfR: Boolean = false,
         val rationaleAction: (RationaleActionParams) -> Unit,
         val targetAction: (() -> Unit)?
@@ -120,10 +120,10 @@ private class PermissionHandleImpl(
 
     fun checkAndRequestPermissionsStorage(): Boolean {
         var result = false
-        val filteredPermissions: List<String>
+        val filteredPermissions: Set<String>
         // TODO проблема не решена на == 26-ом - hasPermissions на запись всегда false, а без него не работает (EasyPermissions также не юзаем, кидаем в настройки)
         val hasStoragePermissions =
-        // для target >= 29: флаг requestLegacyExternalStorage="true" -> WRITE_EXTERNAL_STORAGE учитывается,
+                // для target >= 29: флаг requestLegacyExternalStorage="true" -> WRITE_EXTERNAL_STORAGE учитывается,
                 // false - означает необходимость использования ScopedStorage и отсутствие необходимости запроса этого разрешения (has на write будет всегда true)
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || Environment.isExternalStorageLegacy()) { // isExternalStorageLegacy возвращает на 29-ом true даже если в манифесте флаг отсутствует
                     val storagePermissions = mutableListOf(WRITE_EXTERNAL_STORAGE)
@@ -133,7 +133,7 @@ private class PermissionHandleImpl(
                     filteredPermissions = perms.filter {
                         Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
                                 || it != READ_EXTERNAL_STORAGE // для версий >= Q даже с legacy=true has будет возвращать false на это, отфильтровываем
-                    }
+                    }.toSet()
                     EasyPermissions.hasPermissions(callObject.asContextOrThrow(), *storagePermissions.toTypedArray())
                 } else {
                     filteredPermissions = perms.filter {
@@ -141,8 +141,8 @@ private class PermissionHandleImpl(
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             accepted = accepted and (it != READ_EXTERNAL_STORAGE) // для версий >= Q даже с legacy=true has будет возвращать false на это, отфильтровываем
                         }
-                        return accepted
-                    }
+                        return@filter accepted
+                    }.toSet()
                     true
                 }
 
@@ -154,7 +154,7 @@ private class PermissionHandleImpl(
         return result
     }
 
-    fun checkAndRequestPermissions(perms: List<String>): Boolean = checkAndRequestPermissions(
+    fun checkAndRequestPermissions(perms: Set<String>): Boolean = checkAndRequestPermissions(
             callObject,
             rationale,
             requestCode,
