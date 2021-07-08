@@ -2,7 +2,7 @@ package net.maxsmr.android.build.tasks
 
 import org.gradle.api.tasks.TaskAction
 
-open class CheckSignedAarTask : BaseSignAarTask() {
+open class CheckSignedArchiveTask : BaseSignArchiveTask() {
 
 
     @TaskAction
@@ -18,7 +18,7 @@ open class CheckSignedAarTask : BaseSignAarTask() {
                         "-verify",
                         "-verbose",
                         "-certs",
-                        aarPath,
+                        archivePath,
                         keystoreAlias
                 )
         )

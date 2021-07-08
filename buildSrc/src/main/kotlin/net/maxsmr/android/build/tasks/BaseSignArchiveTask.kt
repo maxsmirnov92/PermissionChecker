@@ -8,7 +8,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import java.io.File
 
-abstract class BaseSignAarTask : DefaultTask() {
+abstract class BaseSignArchiveTask : DefaultTask() {
 
     @Input
     var keystoreAlias: String = ""
@@ -17,7 +17,7 @@ abstract class BaseSignAarTask : DefaultTask() {
     var keystorePassword: String = ""
 
     @Input
-    var aarPath: String = ""
+    var archivePath: String = ""
 
     @Input
     var keystoreFileName: String = "release.keystore"
@@ -26,10 +26,10 @@ abstract class BaseSignAarTask : DefaultTask() {
     var enableLogging: Boolean = false
 
     open fun checkArgs() {
-        checkNotEmpty(keystoreAlias, "Keystore alias")
-        checkNotEmpty(keystorePassword, "Keystore password")
-        checkNotEmpty(keystoreFileName, "Keystore file name")
-        checkFilePathValid(aarPath, "AAR")
+        checkNotEmpty(keystoreAlias, "keystoreAlias")
+        checkNotEmpty(keystorePassword, "keystorePassword")
+        checkNotEmpty(keystoreFileName, "keystoreFileName")
+        checkFilePathValid(archivePath, "archive")
     }
 
     // not using String to split because of spaces in paths
@@ -63,7 +63,7 @@ abstract class BaseSignAarTask : DefaultTask() {
         if (homeDir.isNotEmpty()) {
             keystoreFile = File(homeDir, keystoreFileName)
         }
-        checkFileValid(keystoreFile, "Keystore file")
+        checkFileValid(keystoreFile, "Keystore")
         return keystoreFile!!
     }
 

@@ -1,0 +1,14 @@
+java {
+    sourceSets {
+        main {
+            java.srcDirs += 'src/main/kotlin/'
+            test.java.srcDirs += 'src/test/kotlin'
+        }
+    }
+    sourceCompatibility = sourceCompatibilityVersion
+    targetCompatibility = sourceCompatibilityVersion
+}
+
+apply from: "$rootDir/buildSrc/deploy.gradle"
+
+configureDeployJar(this)

@@ -72,7 +72,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = jvmVersion
         freeCompilerArgs = ["$jvmDefaultArg"]
     }
 
@@ -89,7 +89,7 @@ dependencies {
     implementation "androidx.multidex:multidex:$multidexVersion"
 
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 
     // Tests

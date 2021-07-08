@@ -7,18 +7,18 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
 def projectInfo = project.getProjectInfo()
-def moduleVersion = project.getModuleVersionNameByPath(project.path)
+def moduleVersionName = project.getModuleVersionNameByPath(project.path)
 
 def localReleaseDest = projectInfo.localRepo != "" ? "${rootProject.projectDir}/${projectInfo.localRepo}" : "${rootProject.buildDir}/release/repo"
 
-ext.configureDeploy = { context ->
+ext.configureDeployAar = { context ->
 
     context.afterEvaluate {
 
         assembleRelease.finalizedBy(signReleaseAarTask)
 
-        task sourcesJar(type: Jar) {
-            classifier = 'sources'
+        task androidSourcesJar(type: Jar) {
+            setClassifier('sources')
             from android.sourceSets.main.java.srcDirs
         }
 
@@ -33,15 +33,15 @@ ext.configureDeploy = { context ->
 //        }
 
         artifacts {
-            archives sourcesJar
-//            archives javadocJar
+            archives androidSourcesJar
+//              archives javadocJar
         }
 
         uploadArchives {
             repositories.mavenDeployer {
                 pom.groupId = projectInfo.groupId
                 pom.artifactId = project.archivesBaseName
-                pom.version = moduleVersion
+                pom.version = moduleVersionName
                 repository(url: "file://${localReleaseDest}")
             }
         }
@@ -57,7 +57,8 @@ ext.configureDeploy = { context ->
             publications = ['artifactPublication']
             pkg {
                 repo = projectInfo.repo
-                name = projectInfo.name != ""? projectInfo.name : rootProject.name /*+ File.separator + project.name*/
+                name = projectInfo.name != "" ? projectInfo.name : rootProject.name
+                /*+ File.separator + project.name*/
                 userOrg = user
                 websiteUrl = projectInfo.websiteUrl
                 licenses = ['Apache-2.0']
@@ -75,10 +76,81 @@ ext.configureDeploy = { context ->
 
                     groupId = projectInfo.groupId
                     artifactId = project.archivesBaseName
-                    version = moduleVersion
+                    version = moduleVersionName
                     artifact "${project.buildDir}/outputs/aar/${project.archivesBaseName}-release-signed.aar"
-                    artifact sourcesJar
-//                    artifact javaDocsJar
+
+                    artifact androidSourcesJar
+                    // artifact javaDocsJar
+
+                    pom.withXml {
+                        def dependenciesNode = asNode().appendNode('dependencies')
+
+                        //Iterate over the compile dependencies (we don't want the test ones), adding a <dependency> node for each
+                        configurations.api.allDependencies.each {
+                            // Ensure dependencies such as fileTree are not included.
+                            if (it.group != null && it.name != 'unspecified') {
+                                def dependencyNode = dependenciesNode.appendNode('dependency')
+                                dependencyNode.appendNode('groupId', it.group)
+                                dependencyNode.appendNode('artifactId', it.name)
+                                dependencyNode.appendNode('version', it.version)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+ext.configureDeployJar = { context ->
+
+    context.afterEvaluate {
+
+        jar.finalizedBy(signReleaseJarTask)
+
+        // TODO sources
+
+        uploadArchives {
+            repositories.mavenDeployer {
+                pom.groupId = projectInfo.groupId
+                pom.artifactId = project.archivesBaseName
+                pom.version = moduleVersionName
+                repository(url: "file://${localReleaseDest}")
+            }
+        }
+
+        bintray {
+            user = projectInfo.bintrayUser != "" ? projectInfo.bintrayUser : System.getenv('BINTRAY_USER')
+            key = projectInfo.bintrayApiKey != "" ? projectInfo.bintrayApiKey : System.getenv('BINTRAY_API_KEY')
+            dryRun = false //[Default: false] Whether to run this as dry-run, without deploying
+            publish = true
+            //[Default: false] Whether version should be auto published after an upload
+            override = false
+            //[Default: false] Whether to override version artifacts already published
+            publications = ['artifactPublication']
+            pkg {
+                repo = projectInfo.repo
+                name = projectInfo.name != "" ? projectInfo.name : rootProject.name
+                /*+ File.separator + project.name*/
+                userOrg = user
+                websiteUrl = projectInfo.websiteUrl
+                licenses = ['Apache-2.0']
+                vcsUrl = projectInfo.vcsUrl
+                version {
+                    name = project.getProjectVersion(projectInfo)
+                }
+                publicDownloadNumbers = true
+            }
+        }
+
+        publishing {
+            publications {
+                artifactPublication(MavenPublication) {
+
+                    groupId = projectInfo.groupId
+                    artifactId = project.archivesBaseName
+                    version = moduleVersionName
+                    artifact "${project.buildDir}/jar/${project.archivesBaseName}-release-signed.jar"
 
                     pom.withXml {
                         def dependenciesNode = asNode().appendNode('dependencies')
