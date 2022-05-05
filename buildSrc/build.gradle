@@ -1,24 +1,20 @@
 buildscript {
     repositories {
-        jcenter()
         google()
         mavenCentral()
 //        maven { url 'https://dl.bintray.com/maxsmirnov92/maven' }
     }
     dependencies {
-//        classpath files('libs/commonutils-1.0.8.2.jar')
-//        classpath "net.maxsmr:commonutils:1.0.8.2"
     }
 }
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version "1.4.0"
+    id 'org.jetbrains.kotlin.jvm' version "1.6.21"
 }
 repositories {
-    jcenter()
     mavenCentral()
 }
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.4.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.6.21"
 }
 compileKotlin {
     kotlinOptions {

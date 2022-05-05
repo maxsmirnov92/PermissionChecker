@@ -7,13 +7,14 @@ apply plugin: 'kotlin'
 version = project.getModuleVersionNameByPath(project.path)
 //archivesBaseName = moduleInfo.id
 
+java {
+    sourceCompatibility = sourceCompatibilityVersion
+    targetCompatibility = sourceCompatibilityVersion
+}
+
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
 
     // Jetbrains annotations
     implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-
-    // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 }
-

@@ -1,3 +1,4 @@
 apply from: "$rootDir/buildSrc/baseBuildLib.gradle"
 
-configureDeployAar(this)
+//configureDeployAar(this)
+signAar(this)

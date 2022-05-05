@@ -1,40 +1,41 @@
 ext {
     sourceCompatibilityVersion = JavaVersion.VERSION_1_8
     jvmVersion = "1.8"
-    jvmDefaultArg = "-Xjvm-default=all"
 
-    bintrayGradleVersion = "1+"
-    mavenGradleVersion = "1+"
+//    bintrayGradleVersion = "1+"
+//    mavenGradleVersion = "1+"
 
-    sdkVersion = 30
+    compileSdkVersion = 31
+    targetSdkVersion = 30
     minSdkVersion = 17
 
-    gradlePluginVersion = '4.1.2'
-    buildToolsVersion = '29.0.2'
-    kotlinVersion = '1.4.32'
+    gradlePluginVersion = '7.1.2'
+    buildToolsVersion = '30.0.3'
+    kotlinVersion = '1.6.21'
     kotlinGradlePluginVersion = kotlinVersion
-    androidxCoreVersion = '1.6.0'
-    androidxAppCompatVersion = '1.3.0'
+    androidxCoreVersion = '1.7.0'
+    androidxAppCompatVersion = '1.4.1'
     androidxFragmentVersion = '1.2.5'
-    androidxViewPagerVersion = "1.1.0"
+    androidxViewPagerVersion = "1.2.0"
     androidxRecyclerViewVersion = "1.2.1"
     androidxSwipeRefreshVersion = "1.1.0"
     androidxConstraintLayoutVersion = '2.0.2'
     androidxPaletteVersion = "1.0.0"
-    androidxExifInterfaceVersion = "1.3.2"
-    materialVersion = "1.3.0"
+    androidxExifInterfaceVersion = "1.3.3"
+    materialVersion = "1.5.0"
     jetbrainsAnnotationsVersion = '13.0'
 
     googleServicesVersion = '4.2.0'
 
     commonsNetVersion = '3.3'
-    gsonVersion = '2.8.6'
+    gsonVersion = '2.9.0'
     jsonVersion = '20210307'
+    jodaTimeVersion = '2.9.4'
 
     rxJavaVersion = '2.1.3'
     rxAndroidVersion = '2.1.1'
 
-    lifecycleRuntimeVersion = '2.3.1'
+    lifecycleRuntimeVersion = '2.4.1'
     lifecycleExtensionsVersion = '2.2.0'
     tinkoffDecoroVersion = '1.3.5'
 

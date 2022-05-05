@@ -8,14 +8,14 @@ apply plugin: 'kotlin-kapt'
 
 android {
 
-    compileSdkVersion rootProject.ext.sdkVersion
+    compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     useLibrary 'android.test.runner'
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.sdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
 
         def module = project.getModuleInfoByPath(project.path)
         versionCode project.getModuleVersionCode(module)
@@ -34,7 +34,7 @@ android {
         targetCompatibility sourceCompatibilityVersion
     }
 
-    lintOptions {
+    lint {
         checkReleaseBuilds false
         abortOnError false
     }
@@ -73,7 +73,6 @@ android {
 
     kotlinOptions {
         jvmTarget = jvmVersion
-        freeCompilerArgs = ["$jvmDefaultArg"]
     }
 
     buildFeatures {
@@ -87,10 +86,6 @@ dependencies {
 
     // Multi Dex
     implementation "androidx.multidex:multidex:$multidexVersion"
-
-    // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 
     // Tests
     testImplementation "androidx.test:core:$testCoreVersion"

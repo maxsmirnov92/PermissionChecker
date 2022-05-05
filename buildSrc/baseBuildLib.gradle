@@ -23,12 +23,12 @@ android {
         }
     }
 
-    compileSdkVersion rootProject.ext.sdkVersion
+    compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.sdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
         def module = project.getModuleInfoByPath(project.path)
         versionCode project.getModuleVersionCode(module)
         versionName project.getModuleVersionName(module)
@@ -42,7 +42,7 @@ android {
         targetCompatibility sourceCompatibilityVersion
     }
 
-    lintOptions {
+    lint {
         checkReleaseBuilds false
         abortOnError false
     }
@@ -85,25 +85,21 @@ android {
     }
     kotlinOptions {
         jvmTarget = jvmVersion
-        freeCompilerArgs = ["$jvmDefaultArg"]
     }
 }
 
 dependencies {
 
     // libs/*.jar
-    api fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
     // Jetbrains annotations
     api "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
-
-    // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 }
 
 configurations {
     javadocDependencies
 }
 
-apply from: "$rootDir/buildSrc/deploy.gradle"
+//apply from: "$rootDir/buildSrc/deploy.gradle"
+apply from: "$rootDir/buildSrc/sign.gradle"

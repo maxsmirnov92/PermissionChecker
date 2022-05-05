@@ -6,6 +6,7 @@ import net.maxsmr.android.build.tasks.misc.checkNotEmpty
 import net.maxsmr.android.build.tasks.misc.shell.ShellWrapper
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import java.io.File
 
 abstract class BaseSignArchiveTask : DefaultTask() {
@@ -21,7 +22,7 @@ abstract class BaseSignArchiveTask : DefaultTask() {
 
     @Input
     var keystoreFileName: String = "release.keystore"
-    
+
     @Input
     var enableLogging: Boolean = false
 
@@ -57,6 +58,7 @@ abstract class BaseSignArchiveTask : DefaultTask() {
         }
     }
 
+    @Internal
     protected fun getKeystoreFile(): File {
         var keystoreFile: File? = null
         val homeDir = System.getenv("ANDROID_HOME") ?: ""

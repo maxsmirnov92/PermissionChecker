@@ -9,6 +9,8 @@ java {
     targetCompatibility = sourceCompatibilityVersion
 }
 
-apply from: "$rootDir/buildSrc/deploy.gradle"
+//apply from: "$rootDir/buildSrc/deploy.gradle"
+//configureDeployJar(this)
 
-configureDeployJar(this)
+apply from: "$rootDir/buildSrc/sign.gradle"
+signJar(this)
