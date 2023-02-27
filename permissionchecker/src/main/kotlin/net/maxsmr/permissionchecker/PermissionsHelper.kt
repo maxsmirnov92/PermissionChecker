@@ -1,14 +1,22 @@
 package net.maxsmr.permissionchecker
 
+import android.Manifest
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.Settings
+import android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.view.View
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.startActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import pub.devrel.easypermissions.EasyPermissions
@@ -26,30 +34,37 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) 
     val permanentlyDeniedPermissions: Set<String>
         get() = permanentlyDeniedPrefs?.all?.keys ?: throw IllegalStateException("permanentlyDeniedPrefs is not specified")
 
+    /**
+     * @return true, если версия, на которой выполняется < 30
+     * или для >= 30 (MANAGE_EXTERNAL_STORAGE прописан в манифесте)
+     */
+    val isExternalStorageManager get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
+
     fun doOnPermissionsResult(
-            activity: Activity,
-            rationale: String,
-            requestCode: Int,
-            permissions: Collection<String>,
-            permanentlyDeniedPermissionsHandler: BaseDeniedPermissionsHandler? = null,
-            onDenied: ((Set<String>) -> Unit)? = null,
-            onNegativePermanentlyDeniedAction:  ((Set<String>) -> Unit)? = onDenied,
-            onAllGranted: () -> Unit,
+        activity: Activity,
+        rationale: String,
+        requestCode: Int,
+        permissions: Collection<String>,
+        permanentlyDeniedPermissionsHandler: BaseDeniedPermissionsHandler? = null,
+        onDenied: ((Set<String>) -> Unit)? = null,
+        onNegativePermanentlyDeniedAction: ((Set<String>) -> Unit)? = onDenied,
+        onAllGranted: () -> Unit,
     ): ResultListener? {
         val handler = PermissionsCallbacks(
-                onPermanentlyDeniedPermissions = if (permanentlyDeniedPermissionsHandler != null) { denied ->
-                    permanentlyDeniedPermissionsHandler.showMessage(requestCode, rationale, denied, onNegativePermanentlyDeniedAction)
-                } else {
-                    null
-                },
-                onDenied = onDenied,
-                onAllGranted = onAllGranted
+            onPermanentlyDeniedPermissions = if (permanentlyDeniedPermissionsHandler != null) { denied ->
+                permanentlyDeniedPermissionsHandler.showMessage(requestCode, rationale, denied, onNegativePermanentlyDeniedAction)
+            } else {
+                null
+            },
+            onDenied = onDenied,
+            onAllGranted = onAllGranted
         )
-        return doOnPermissionsResult(activity,
-                rationale,
-                requestCode,
-                permissions.toSet(),
-                handler,
+        return doOnPermissionsResult(
+            activity,
+            rationale,
+            requestCode,
+            permissions.toSet(),
+            handler,
         )
     }
 
@@ -66,11 +81,11 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) 
      * @return объект, в который надо отчитаться о результате или null, если запрос разрешений не требуется
      */
     fun doOnPermissionsResult(
-            activity: Activity,
-            rationale: String,
-            requestCode: Int,
-            perms: Collection<String>,
-            callbacks: PermissionsCallbacks,
+        activity: Activity,
+        rationale: String,
+        requestCode: Int,
+        perms: Collection<String>,
+        callbacks: PermissionsCallbacks,
     ): ResultListener? {
         val filtered = filterPermissionsByApiVersion(perms)
         if (filtered.isEmpty() || hasPermissions(activity, false, filtered)) {
@@ -92,6 +107,36 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) 
         return ResultListener(activity, filtered.toSet(), callbacks)
     }
 
+    fun doOnStoragePermissionsResult(
+        activity: Activity,
+        rationale: String,
+        requestCode: Int,
+        callbacks: PermissionsCallbacks,
+        manageAllFilesIfR: Boolean,
+        applicationId: String
+    ) {
+        // write включаем для всех, но пригодится для некоторых
+        val storagePermissions = mutableListOf(WRITE_EXTERNAL_STORAGE)
+        // для target == 29: флаг requestLegacyExternalStorage:
+        // 1. false - означает необходимость использования ScopedStorage и отсутствие необходимости запроса этого разрешения (has на write будет всегда true)
+        // 2. true - не сработает на > 29 (Android 11 и выше) -> isExternalStorageLegacy будет всегда false
+
+        // для версий >= Q даже с legacy=true has будет возвращать false на это, не включаем
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            storagePermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+        doOnPermissionsResult(activity, rationale, requestCode, storagePermissions, PermissionsCallbacks(
+            callbacks.onPermanentlyDeniedPermissions,
+            callbacks.onDenied
+        ) {
+            if (manageAllFilesIfR && !isExternalStorageManager) {
+                startManageAllFilesActivity(activity, requestCode, applicationId)
+            } else {
+                callbacks.onAllGranted.invoke()
+            }
+        })
+    }
+
     fun filterDeniedNotAskAgain(context: Context, permission: Collection<String>): Set<String> {
         val result = mutableSetOf<String>()
         for (perm in permission) {
@@ -108,10 +153,10 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) 
     }
 
     fun hasPermissions(context: Context, vararg perms: String) =
-            hasPermissions(context, true, perms.toSet())
+        hasPermissions(context, true, perms.toSet())
 
     fun hasPermissions(context: Context, perms: Collection<String>) =
-            hasPermissions(context, true, perms)
+        hasPermissions(context, true, perms)
 
     private fun hasPermissions(context: Context, filter: Boolean, perms: Collection<String>): Boolean {
         val target = if (filter) filterPermissionsByApiVersion(perms) else perms
@@ -121,10 +166,10 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) 
     }
 
     private fun requestPermissions(
-            obj: Any?,
-            rationale: String,
-            requestCode: Int,
-            perms: Set<String>
+        obj: Any?,
+        rationale: String,
+        requestCode: Int,
+        perms: Set<String>
     ) {
         when (obj) {
             is View -> {
@@ -172,7 +217,8 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) 
      */
     private fun filterPermissionsByApiVersion(perms: Collection<String>): Set<String> {
         return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
-                || Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && Environment.isExternalStorageLegacy()) {
+            || Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && Environment.isExternalStorageLegacy()
+        ) {
             // ниже Q или равно Q и legacy
             // write всегда, если есть (уже включает read)
             perms.toSet()
@@ -195,14 +241,27 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) 
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.R)
+    private fun startManageAllFilesActivity(activity: Activity, requestCode: Int, applicationId: String) {
+        try {
+            val uri: Uri = Uri.parse("package:$applicationId")
+            val intent = Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri)
+            activity.startActivityForResult(intent, requestCode)
+        } catch (e: Exception) {
+            val intent = Intent()
+            intent.action = ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
+            activity.startActivityForResult(intent, requestCode)
+        }
+    }
+
     /**
      * Вызвать onRequestPermissionsResult или onAfterPermissionGranted
      * в зав-ти от реализации в целевом фрагменте/активити;
      */
     inner class ResultListener(
-            val activity: Activity,
-            val allPermissions: Set<String>,
-            val callbacks: PermissionsCallbacks
+        val activity: Activity,
+        val allPermissions: Set<String>,
+        val callbacks: PermissionsCallbacks
     ) {
 
         init {

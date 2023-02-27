@@ -9,9 +9,9 @@ ext {
     targetSdkVersion = 30
     minSdkVersion = 17
 
-    gradlePluginVersion = '7.1.2'
+    gradlePluginVersion = '7.2.1'
     buildToolsVersion = '30.0.3'
-    kotlinVersion = '1.6.21'
+    kotlinVersion = '1.7.10'
     kotlinGradlePluginVersion = kotlinVersion
     androidxCoreVersion = '1.7.0'
     androidxAppCompatVersion = '1.4.1'
