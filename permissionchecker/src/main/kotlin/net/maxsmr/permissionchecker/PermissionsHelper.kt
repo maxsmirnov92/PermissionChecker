@@ -27,12 +27,12 @@ import pub.devrel.easypermissions.EasyPermissions
  */
 typealias PermissionResult = Map<String, Boolean>
 
-class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) {
+class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
 
     val lastPermissionsResult = MutableLiveData<PermissionResult>()
 
     val permanentlyDeniedPermissions: Set<String>
-        get() = permanentlyDeniedPrefs?.all?.keys ?: throw IllegalStateException("permanentlyDeniedPrefs is not specified")
+        get() = permanentlyDeniedPrefs.all.keys
 
     /**
      * @return true, если версия, на которой выполняется < 30
@@ -219,7 +219,7 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) 
         return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
             || Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && Environment.isExternalStorageLegacy()
         ) {
-            // ниже Q или равно Q и legacy
+            // ниже Q или равно Q с requestLegacyExternalStorage=true в манифесте
             // write всегда, если есть (уже включает read)
             perms.toSet()
         } else {
@@ -287,9 +287,7 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences?) 
         fun onRequestPermissionsResult(permissions: Array<out String>, grantResults: IntArray): Boolean {
             val deniedNotAskAgain = mutableListOf<String>()
             val permissionResults = mutableMapOf<String, Boolean>()
-            val filterResult = filterPermissionsByApiVersion(permissions.toSet())
-
-            filterResult.forEachIndexed { i, perm ->
+            permissions.forEachIndexed { i, perm ->
                 val isGranted = grantResults[i] == PackageManager.PERMISSION_GRANTED
                 if (!isGranted && !shouldShowRequestPermissionRationale(activity, perm)) {
                     deniedNotAskAgain.add(perm)
