@@ -17,14 +17,14 @@ android {
             props.load(new FileInputStream(propsFile))
 
             storeFile file("${System.getenv('ANDROID_HOME')}/release.keystore")
-            storePassword props['signingPassword']
             keyAlias props['alias']
+            storePassword props['signingPassword']
             keyPassword props['signingPassword']
         }
     }
 
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+//    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
@@ -32,6 +32,8 @@ android {
         def module = project.getModuleInfoByPath(project.path)
         versionCode project.getModuleVersionCode(module)
         versionName project.getModuleVersionName(module)
+        setProperty("archivesBaseName", "${project.name}-${versionName}")
+
         vectorDrawables.useSupportLibrary = true
 
         consumerProguardFiles "consumer-rules.pro"
@@ -64,18 +66,6 @@ android {
 //            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
-        libraryVariants.all { variant ->
-            variant.outputs.all { output ->
-                def baseName = "${project.name}-${variant.name}"
-                def outputFileName = "${baseName}.aar"
-                println "Setting aar name to $outputFileName for variant ${variant.name}"
-                output.outputFileName = outputFileName
-                setProperty("archivesBaseName", project.name)
-                if (variant.name == "release") {
-                    project.ext.releaseArchivesBaseName = baseName
-                }
-            }
-        }
 //        productFlavors.all { flavor ->
 //        }
     }
@@ -85,6 +75,16 @@ android {
     }
     kotlinOptions {
         jvmTarget = jvmVersion
+    }
+
+    libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            def module = project.getModuleInfoByPath(project.path)
+            def baseName = "${project.name}-${variant.name}-${project.getModuleVersionName(module)}"
+            def outputFileName = "${baseName}.aar"
+            println "Setting aar name to $outputFileName for variant ${variant.name}"
+            output.outputFileName = outputFileName
+        }
     }
 }
 
@@ -102,4 +102,3 @@ configurations {
 }
 
 //apply from: "$rootDir/buildSrc/deploy.gradle"
-apply from: "$rootDir/buildSrc/sign.gradle"

@@ -1,4 +1,5 @@
+//apply from: "$rootDir/buildSrc/sign.gradle"
 apply from: "$rootDir/buildSrc/baseBuildLib.gradle"
 
 //configureDeployAar(this)
-signAar(this)
+//signAar(this)

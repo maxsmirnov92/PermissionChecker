@@ -8,21 +8,21 @@ buildscript {
     }
 }
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version "1.6.21"
+    id 'org.jetbrains.kotlin.jvm' version "1.9.22"
 }
 repositories {
     mavenCentral()
 }
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.6.21"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.22"
 }
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 }
 compileTestKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 }

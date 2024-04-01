@@ -1,5 +1,9 @@
 apply from: "$rootDir/buildSrc/androidApp.gradle"
 
+android {
+    namespace 'net.maxsmr.permissionchecker.test'
+}
+
 dependencies {
 
     implementation project(':permissionchecker')

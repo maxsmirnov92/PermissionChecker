@@ -1,24 +1,24 @@
 import net.maxsmr.android.build.tasks.*
 
-task signReleaseAarTask(type: SignReleaseArchiveTask) {
-    def propsFile = new File("$rootDir/buildSrc/keystore.properties")
-    def props = new Properties()
-    props.load(new FileInputStream(propsFile))
-    keystoreAlias = props['alias']
-    keystorePassword = props['signingPassword']
-    archivePath = "${project.buildDir}/outputs/aar/${project.archivesBaseName}-release.aar"
-    archiveExtension = "aar"
-}
+//task signReleaseAarTask(type: SignReleaseArchiveTask) {
+//    def propsFile = new File("$rootDir/buildSrc/keystore.properties")
+//    def props = new Properties()
+//    props.load(new FileInputStream(propsFile))
+//    keystoreAlias = props['alias']
+//    keystorePassword = props['signingPassword']
+//    archivePath = "${project.buildDir}/outputs/aar/${project.archivesBaseName}-release.aar"
+//    archiveExtension = "aar"
+//}
 
-task checkSignedReleaseAarTask(type: CheckSignedArchiveTask) {
-    def propsFile = new File("$rootDir/buildSrc/keystore.properties")
-    def props = new Properties()
-    props.load(new FileInputStream(propsFile))
-    keystoreAlias = props['alias']
-    keystorePassword = props['signingPassword']
-    archivePath = "${project.buildDir}/outputs/aar/${project.archivesBaseName}-release-signed.aar"
-    enableLogging = true
-}
+//task checkSignedReleaseAarTask(type: CheckSignedArchiveTask) {
+//    def propsFile = new File("$rootDir/buildSrc/keystore.properties")
+//    def props = new Properties()
+//    props.load(new FileInputStream(propsFile))
+//    keystoreAlias = props['alias']
+//    keystorePassword = props['signingPassword']
+//    archivePath = "${project.buildDir}/outputs/aar/${project.archivesBaseName}-release-signed.aar"
+//    enableLogging = true
+//}
 
 task signReleaseJarTask(type: SignReleaseArchiveTask) {
     def propsFile = new File("$rootDir/buildSrc/keystore.properties")

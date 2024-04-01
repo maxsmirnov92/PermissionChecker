@@ -11,14 +11,11 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
-import android.provider.Settings
 import android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.view.View
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat.startActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.MutableLiveData
 import pub.devrel.easypermissions.EasyPermissions
 
 
@@ -28,8 +25,6 @@ import pub.devrel.easypermissions.EasyPermissions
 typealias PermissionResult = Map<String, Boolean>
 
 class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
-
-    val lastPermissionsResult = MutableLiveData<PermissionResult>()
 
     val permanentlyDeniedPermissions: Set<String>
         get() = permanentlyDeniedPrefs.all.keys
@@ -93,49 +88,20 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
             return null
         }
 
-        val deniedNotAskAgain = filterDeniedNotAskAgain(activity, filtered)
-        if (deniedNotAskAgain.isNotEmpty()) {
+        val hasDeniedNotAskAgain = filterDeniedNotAskAgain(activity, filtered).isNotEmpty()
+        if (hasDeniedNotAskAgain) {
             // В кейсе наличия ходя бы одного отклоненного с опцией "Больше не спрашивать" разрешения,
             // вызов YesNo диалога с переходом в настройки (в дефолтной реализации)
             // В диалог передаем не только permanentlyDenied, но и просто denied разрешения, т.к. после возврата
             // из настроек они также учитываются в полном перечне необходимых для выполнения действия разрешений
             val notGranted = filtered.filter { !hasPermissions(activity, false, listOf(it)) }.toSet()
-            callbacks.onPermanentlyDeniedPermissions?.invoke(PermissionsCallbacks.DeniedPermissions(notGranted, deniedNotAskAgain))
+            callbacks.onPermanentlyDeniedPermissions?.invoke(notGranted)
         } else {
             requestPermissions(activity, rationale, requestCode, filtered)
         }
         return ResultListener(activity, filtered.toSet(), callbacks)
     }
 
-    fun doOnStoragePermissionsResult(
-        activity: Activity,
-        rationale: String,
-        requestCode: Int,
-        callbacks: PermissionsCallbacks,
-        manageAllFilesIfR: Boolean,
-        applicationId: String
-    ) {
-        // write включаем для всех, но пригодится для некоторых
-        val storagePermissions = mutableListOf(WRITE_EXTERNAL_STORAGE)
-        // для target == 29: флаг requestLegacyExternalStorage:
-        // 1. false - означает необходимость использования ScopedStorage и отсутствие необходимости запроса этого разрешения (has на write будет всегда true)
-        // 2. true - не сработает на > 29 (Android 11 и выше) -> isExternalStorageLegacy будет всегда false
-
-        // для версий >= Q даже с legacy=true has будет возвращать false на это, не включаем
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            storagePermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
-        doOnPermissionsResult(activity, rationale, requestCode, storagePermissions, PermissionsCallbacks(
-            callbacks.onPermanentlyDeniedPermissions,
-            callbacks.onDenied
-        ) {
-            if (manageAllFilesIfR && !isExternalStorageManager) {
-                startManageAllFilesActivity(activity, requestCode, applicationId)
-            } else {
-                callbacks.onAllGranted.invoke()
-            }
-        })
-    }
 
     fun filterDeniedNotAskAgain(context: Context, permission: Collection<String>): Set<String> {
         val result = mutableSetOf<String>()
@@ -148,7 +114,7 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
     }
 
     fun isDeniedNotAskAgain(context: Context, permission: String): Boolean {
-        if (permanentlyDeniedPrefs == null || !permanentlyDeniedPrefs.contains(permission)) return false
+        if (!permanentlyDeniedPrefs.contains(permission)) return false
         return !hasPermissions(context, permission)
     }
 
@@ -175,12 +141,15 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
             is View -> {
                 requestPermissions(obj.context as? Activity, rationale, requestCode, perms)
             }
+
             is Fragment -> {
                 EasyPermissions.requestPermissions(obj, rationale, requestCode, *perms.toTypedArray())
             }
+
             is Activity -> {
                 EasyPermissions.requestPermissions(obj, rationale, requestCode, *perms.toTypedArray())
             }
+
             else -> {
                 throw IllegalArgumentException("Incompatible type for $obj to requestPermissions")
             }
@@ -193,12 +162,15 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
             is Activity -> {
                 ActivityCompat.shouldShowRequestPermissionRationale(obj, perm)
             }
+
             is Fragment -> {
                 obj.shouldShowRequestPermissionRationale(perm)
             }
+
             is View -> {
                 shouldShowRequestPermissionRationale(obj.context as Activity, perm)
             }
+
             is android.app.Fragment -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     obj.shouldShowRequestPermissionRationale(perm)
@@ -206,6 +178,7 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
                     shouldShowRequestPermissionRationale(obj.activity, perm)
                 }
             }
+
             else -> {
                 throw IllegalArgumentException("Incompatible type for $obj to shouldShowRequestPermissionRationale")
             }
@@ -225,15 +198,11 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
         } else {
             // > Q (или Q и не legacy) - форсированное использование scoped storage, разрешение на запись не требуется. На чтение нужно для
             // чтения чужих файлов или своих файлов после переустановки приложения
-            perms.filter {
-                // read возможно нужен для scoped, не убираем
-                it != WRITE_EXTERNAL_STORAGE
-            }.toSet()
+            perms.filter { it != WRITE_EXTERNAL_STORAGE }.toSet()
         }
     }
 
     private fun removeFromDenied(perms: Collection<String>) {
-        if (permanentlyDeniedPrefs == null) return
         perms.filter { permanentlyDeniedPrefs.contains(it) }.takeIf { it.isNotEmpty() }?.let {
             val editor = permanentlyDeniedPrefs.edit()
             it.forEach(editor::remove)
@@ -242,15 +211,24 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
     }
 
     @TargetApi(Build.VERSION_CODES.R)
-    private fun startManageAllFilesActivity(activity: Activity, requestCode: Int, applicationId: String) {
+    private fun startManageAllFilesActivity(activity: Activity, requestCode: Int?, applicationId: String) {
+
+        fun start(intent: Intent) {
+            requestCode?.let {
+                activity.startActivityForResult(intent, requestCode)
+            } ?: {
+                activity.startActivity(intent)
+            }
+        }
+
         try {
             val uri: Uri = Uri.parse("package:$applicationId")
             val intent = Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri)
-            activity.startActivityForResult(intent, requestCode)
+            start(intent)
         } catch (e: Exception) {
             val intent = Intent()
             intent.action = ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
-            activity.startActivityForResult(intent, requestCode)
+            start(intent)
         }
     }
 
@@ -294,14 +272,13 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
                 }
                 permissionResults[perm] = isGranted
             }
-            if (deniedNotAskAgain.isNotEmpty() && permanentlyDeniedPrefs != null) {
+            if (deniedNotAskAgain.isNotEmpty()) {
                 val editor = permanentlyDeniedPrefs.edit()
                 for (perm in deniedNotAskAgain) {
                     editor.putBoolean(perm, true)
                 }
                 editor.apply()
             }
-            lastPermissionsResult.value = permissionResults
 
             val denied = permissionResults.filterValues { !it }.keys
             return callbacks.onAfterPermissionResult(denied)

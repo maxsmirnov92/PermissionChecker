@@ -1,4 +1,4 @@
-package net.maxsmr.permission.test;
+package net.maxsmr.permissionchecker.test;
 
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -36,8 +36,8 @@ public class TestPermissionsActivity extends AppCompatActivity implements Permis
     private Dialog createPermissionAlertDialog(String permission, final boolean granted, DialogInterface.OnClickListener positiveClickListener) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(
-                String.format(granted ? getString(R.string.dialog_message_permission_granted) :
-                                getString(R.string.dialog_message_permission_denied),
+                String.format(granted ? getString(net.maxsmr.permissionchecker.R.string.dialog_message_permission_granted) :
+                                getString(net.maxsmr.permissionchecker.R.string.dialog_message_permission_denied),
                         permission))
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok, positiveClickListener)
@@ -61,7 +61,7 @@ public class TestPermissionsActivity extends AppCompatActivity implements Permis
     @NotNull
     private Dialog createNoPermissionsAlertDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(R.string.dialog_message_permissions_empty)
+        builder.setMessage(net.maxsmr.permissionchecker.R.string.dialog_message_permissions_empty)
                 .setCancelable(true)
                 .setPositiveButton(android.R.string.ok, null)
                 .setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -139,7 +139,7 @@ public class TestPermissionsActivity extends AppCompatActivity implements Permis
 
     private void invalidateMessageView() {
         if (PermissionChecker.getInstance().checkAppPermissions()) {
-            messageView.setText(R.string.text_all_permissions_granted);
+            messageView.setText(net.maxsmr.permissionchecker.R.string.text_all_permissions_granted);
         } else {
             messageView.setText(null);
         }

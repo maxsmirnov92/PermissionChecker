@@ -12,10 +12,10 @@ abstract class BaseDeniedPermissionsHandler {
     fun showMessage(
             requestCode: Int,
             messageIfEmpty: String,
-            deniedPerms: PermissionsCallbacks.DeniedPermissions,
+            deniedPerms: Set<String>,
             negativeAction: ((Set<String>) -> Unit)? = null,
     ) {
-        val targetMessage = if (deniedPerms.isEmpty) {
+        val targetMessage = if (deniedPerms.isEmpty()) {
             messageIfEmpty
         } else {
             formatDeniedPermissionsMessage(deniedPerms)
@@ -26,9 +26,9 @@ abstract class BaseDeniedPermissionsHandler {
     protected abstract fun doShowMessage(
             requestCode: Int,
             message: String,
-            deniedPerms: PermissionsCallbacks.DeniedPermissions,
+            deniedPerms: Set<String>,
             negativeAction: ((Set<String>) -> Unit)?,
     )
 
-    protected abstract fun formatDeniedPermissionsMessage(deniedPerms: PermissionsCallbacks.DeniedPermissions): String
+    protected abstract fun formatDeniedPermissionsMessage(perms: Collection<String>): String
 }

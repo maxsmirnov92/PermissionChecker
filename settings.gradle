@@ -1,1 +1,2 @@
-include ':permissionchecker', ':testapp'
+include ':permissionchecker'
+include ':testapp'

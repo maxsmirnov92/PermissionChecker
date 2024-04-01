@@ -1,4 +1,4 @@
-package net.maxsmr.permission.test;
+package net.maxsmr.permissionchecker.test;
 
 import android.os.Bundle;
 import org.jetbrains.annotations.Nullable;
@@ -44,7 +44,7 @@ public class TestSplashPermissionsActivity extends BaseSplashPermissionActivity 
 
     @Override
     protected void doFinalAction() {
-        Toast.makeText(this, R.string.text_all_permissions_granted, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, net.maxsmr.permissionchecker.R.string.text_all_permissions_granted, Toast.LENGTH_SHORT).show();
     }
 
     @Nullable
