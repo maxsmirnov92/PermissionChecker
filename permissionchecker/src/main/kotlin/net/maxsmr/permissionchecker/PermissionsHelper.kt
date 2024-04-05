@@ -1,6 +1,5 @@
 package net.maxsmr.permissionchecker
 
-import android.Manifest
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.TargetApi
 import android.app.Activity
@@ -24,10 +23,10 @@ import pub.devrel.easypermissions.EasyPermissions
  */
 typealias PermissionResult = Map<String, Boolean>
 
-class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
+class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
 
     val permanentlyDeniedPermissions: Set<String>
-        get() = permanentlyDeniedPrefs.all.keys
+        get() = permanentlyDeniedStorage.allKeys
 
     /**
      * @return true, если версия, на которой выполняется < 30
@@ -114,7 +113,7 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
     }
 
     fun isDeniedNotAskAgain(context: Context, permission: String): Boolean {
-        if (!permanentlyDeniedPrefs.contains(permission)) return false
+        if (!permanentlyDeniedStorage.containsKey(permission)) return false
         return !hasPermissions(context, permission)
     }
 
@@ -203,10 +202,8 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
     }
 
     private fun removeFromDenied(perms: Collection<String>) {
-        perms.filter { permanentlyDeniedPrefs.contains(it) }.takeIf { it.isNotEmpty() }?.let {
-            val editor = permanentlyDeniedPrefs.edit()
-            it.forEach(editor::remove)
-            editor.apply()
+        perms.filter { permanentlyDeniedStorage.containsKey(it) }.takeIf { it.isNotEmpty() }?.let {
+            permanentlyDeniedStorage.removeKeys(it)
         }
     }
 
@@ -273,11 +270,7 @@ class PermissionsHelper(private val permanentlyDeniedPrefs: SharedPreferences) {
                 permissionResults[perm] = isGranted
             }
             if (deniedNotAskAgain.isNotEmpty()) {
-                val editor = permanentlyDeniedPrefs.edit()
-                for (perm in deniedNotAskAgain) {
-                    editor.putBoolean(perm, true)
-                }
-                editor.apply()
+                permanentlyDeniedStorage.putBoolean(deniedNotAskAgain.associateWith { true })
             }
 
             val denied = permissionResults.filterValues { !it }.keys
