@@ -1,11 +1,11 @@
 package net.maxsmr.permissionchecker
 
+import android.Manifest
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -35,7 +35,7 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
     val isExternalStorageManager get() = Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
 
     fun doOnPermissionsResult(
-        activity: Activity,
+        context: Context,
         rationale: String,
         requestCode: Int,
         permissions: Collection<String>,
@@ -54,7 +54,7 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
             onAllGranted = onAllGranted
         )
         return doOnPermissionsResult(
-            activity,
+            context,
             rationale,
             requestCode,
             permissions.toSet(),
@@ -75,30 +75,30 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
      * @return объект, в который надо отчитаться о результате или null, если запрос разрешений не требуется
      */
     fun doOnPermissionsResult(
-        activity: Activity,
+        context: Context,
         rationale: String,
         requestCode: Int,
         perms: Collection<String>,
         callbacks: PermissionsCallbacks,
     ): ResultListener? {
-        val filtered = filterPermissionsByApiVersion(perms)
-        if (filtered.isEmpty() || hasPermissions(activity, false, filtered)) {
+        val filtered = filterStoragePermissionsByApiVersion(perms)
+        if (filtered.isEmpty() || hasPermissions(context, false, filtered)) {
             callbacks.onAllGranted()
             return null
         }
 
-        val hasDeniedNotAskAgain = filterDeniedNotAskAgain(activity, filtered).isNotEmpty()
+        val hasDeniedNotAskAgain = filterDeniedNotAskAgain(context, filtered).isNotEmpty()
         if (hasDeniedNotAskAgain) {
             // В кейсе наличия ходя бы одного отклоненного с опцией "Больше не спрашивать" разрешения,
             // вызов YesNo диалога с переходом в настройки (в дефолтной реализации)
             // В диалог передаем не только permanentlyDenied, но и просто denied разрешения, т.к. после возврата
             // из настроек они также учитываются в полном перечне необходимых для выполнения действия разрешений
-            val notGranted = filtered.filter { !hasPermissions(activity, false, listOf(it)) }.toSet()
+            val notGranted = filtered.filter { !hasPermissions(context, false, listOf(it)) }.toSet()
             callbacks.onPermanentlyDeniedPermissions?.invoke(notGranted)
         } else {
-            requestPermissions(activity, rationale, requestCode, filtered)
+            requestPermissions(context, rationale, requestCode, filtered)
         }
-        return ResultListener(activity, filtered.toSet(), callbacks)
+        return ResultListener(context, filtered.toSet(), callbacks)
     }
 
 
@@ -124,7 +124,8 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
         hasPermissions(context, true, perms)
 
     private fun hasPermissions(context: Context, filter: Boolean, perms: Collection<String>): Boolean {
-        val target = if (filter) filterPermissionsByApiVersion(perms) else perms
+        if (perms.isEmpty()) return true
+        val target = if (filter) filterStoragePermissionsByApiVersion(perms) else perms
         val granted = target.filter { EasyPermissions.hasPermissions(context, it) }
         removeFromDenied(granted)
         return target.size == granted.size
@@ -184,22 +185,6 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
         }
     }
 
-    /**
-     * Фильтрует разрешения, которые не надо запрашивать для определенных версий апи (см. флаги в манифесте приложения)
-     */
-    private fun filterPermissionsByApiVersion(perms: Collection<String>): Set<String> {
-        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
-            || Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && Environment.isExternalStorageLegacy()
-        ) {
-            // ниже Q или равно Q с requestLegacyExternalStorage=true в манифесте
-            // write всегда, если есть (уже включает read)
-            perms.toSet()
-        } else {
-            // > Q (или Q и не legacy) - форсированное использование scoped storage, разрешение на запись не требуется. На чтение нужно для
-            // чтения чужих файлов или своих файлов после переустановки приложения
-            perms.filter { it != WRITE_EXTERNAL_STORAGE }.toSet()
-        }
-    }
 
     private fun removeFromDenied(perms: Collection<String>) {
         perms.filter { permanentlyDeniedStorage.containsKey(it) }.takeIf { it.isNotEmpty() }?.let {
@@ -234,7 +219,7 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
      * в зав-ти от реализации в целевом фрагменте/активити;
      */
     inner class ResultListener(
-        val activity: Activity,
+        val context: Context,
         val allPermissions: Set<String>,
         val callbacks: PermissionsCallbacks
     ) {
@@ -251,7 +236,7 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
          * @return true, если заранее известные [allPermissions] были предоставлены
          */
         fun onActivityResult(): Boolean {
-            val denied = allPermissions.filter { !hasPermissions(activity, false, listOf(it)) }
+            val denied = allPermissions.filter { !hasPermissions(context, false, listOf(it)) }
             return callbacks.onAfterPermissionResult(denied.toSet())
         }
 
@@ -264,7 +249,7 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
             val permissionResults = mutableMapOf<String, Boolean>()
             permissions.forEachIndexed { i, perm ->
                 val isGranted = grantResults[i] == PackageManager.PERMISSION_GRANTED
-                if (!isGranted && !shouldShowRequestPermissionRationale(activity, perm)) {
+                if (!isGranted && !shouldShowRequestPermissionRationale(context, perm)) {
                     deniedNotAskAgain.add(perm)
                 }
                 permissionResults[perm] = isGranted
@@ -275,6 +260,34 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
 
             val denied = permissionResults.filterValues { !it }.keys
             return callbacks.onAfterPermissionResult(denied)
+        }
+    }
+
+    companion object {
+
+        fun addPostNotificationsByApiVersion(perms: Collection<String>): Set<String> {
+            val permissions = perms.toMutableList()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            return perms.toSet()
+        }
+
+        /**
+         * Фильтрует разрешения, которые не надо запрашивать для определенных версий апи (см. флаги в манифесте приложения)
+         */
+        private fun filterStoragePermissionsByApiVersion(perms: Collection<String>): Set<String> {
+            return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                || Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && Environment.isExternalStorageLegacy()
+            ) {
+                // ниже Q или равно Q с requestLegacyExternalStorage=true в манифесте
+                // write всегда, если есть (уже включает read)
+                perms.toSet()
+            } else {
+                // > Q (или Q и не legacy) - форсированное использование scoped storage, разрешение на запись не требуется. На чтение нужно для
+                // чтения чужих файлов или своих файлов после переустановки приложения
+                perms.filter { it != WRITE_EXTERNAL_STORAGE }.toSet()
+            }
         }
     }
 }

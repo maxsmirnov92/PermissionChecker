@@ -5,11 +5,20 @@ apply plugin: 'java-library'
 apply plugin: 'kotlin'
 
 version = project.getModuleVersionNameByPath(project.path)
-//archivesBaseName = moduleInfo.id
+archivesBaseName = "${moduleInfo.id}+${moduleInfo.versionName}"
 
 java {
     sourceCompatibility = sourceCompatibilityVersion
     targetCompatibility = sourceCompatibilityVersion
+}
+
+task sourcesJar(type: Jar) {
+    archiveClassifier  = 'sources'
+    from java.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
 }
 
 dependencies {

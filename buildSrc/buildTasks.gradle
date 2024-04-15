@@ -26,7 +26,7 @@ task signReleaseJarTask(type: SignReleaseArchiveTask) {
     props.load(new FileInputStream(propsFile))
     keystoreAlias = props['alias']
     keystorePassword = props['signingPassword']
-    archivePath = "${project.buildDir}/libs/${project.archivesBaseName}-${project.version}.jar"
+    archivePath = "${project.buildDir}/libs/${project.getProperties()[archivesBaseName]}-${project.version}.jar"
     archiveExtension = "jar"
 }
 
@@ -36,6 +36,6 @@ task checkSignedReleaseJarTask(type: CheckSignedArchiveTask) {
     props.load(new FileInputStream(propsFile))
     keystoreAlias = props['alias']
     keystorePassword = props['signingPassword']
-    archivePath = "${project.buildDir}/libs/${project.archivesBaseName}-${project.version}-signed.jar"
+    archivePath = "${project.buildDir}/libs/${project.getProperties()[archivesBaseName]}-${project.version}-signed.jar"
     enableLogging = true
 }

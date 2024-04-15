@@ -5,11 +5,9 @@ android {
 }
 
 dependencies {
-
     // Support
-    api "androidx.core:core-ktx:$androidxCoreVersion"
+    implementation "androidx.core:core-ktx:$androidxCoreVersion"
 
     // EasyPermissions
-    implementation "pub.devrel:easypermissions:$easyPermissionsVersion"
-
+    api "pub.devrel:easypermissions:$easyPermissionsVersion"
 }
