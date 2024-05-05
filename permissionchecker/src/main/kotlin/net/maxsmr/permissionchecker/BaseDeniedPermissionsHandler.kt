@@ -10,10 +10,10 @@ abstract class BaseDeniedPermissionsHandler {
      * @param permanentlyDeniedPerms отклонённые разрешения по "don't ask again" (включены в [deniedPerms])
      */
     fun showMessage(
-            requestCode: Int,
-            messageIfEmpty: String,
-            deniedPerms: Set<String>,
-            negativeAction: ((Set<String>) -> Unit)? = null,
+        requestCode: Int,
+        messageIfEmpty: String,
+        deniedPerms: Set<String>,
+        negativeAction: ((Set<String>) -> Unit)? = null,
     ) {
         val targetMessage = if (deniedPerms.isEmpty()) {
             messageIfEmpty
@@ -24,10 +24,10 @@ abstract class BaseDeniedPermissionsHandler {
     }
 
     protected abstract fun doShowMessage(
-            requestCode: Int,
-            message: String,
-            deniedPerms: Set<String>,
-            negativeAction: ((Set<String>) -> Unit)?,
+        requestCode: Int,
+        message: String,
+        deniedPerms: Set<String>,
+        negativeAction: ((Set<String>) -> Unit)?,
     )
 
     protected abstract fun formatDeniedPermissionsMessage(perms: Collection<String>): String

@@ -114,7 +114,12 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
 
     fun isDeniedNotAskAgain(context: Context, permission: String): Boolean {
         if (!permanentlyDeniedStorage.containsKey(permission)) return false
-        return !hasPermissions(context, permission)
+        val has = hasPermissions(context, permission)
+        if (has) {
+            // более не permanently denied
+            permanentlyDeniedStorage.removeKeys(listOf(permission))
+        }
+        return !has
     }
 
     fun hasPermissions(context: Context, vararg perms: String) =
