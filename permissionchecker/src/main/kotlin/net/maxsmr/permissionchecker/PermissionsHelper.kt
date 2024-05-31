@@ -270,12 +270,12 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
 
     companion object {
 
-        fun addPostNotificationsByApiVersion(perms: Collection<String>): Set<String> {
+        fun withPostNotificationsByApiVersion(perms: Collection<String>): Set<String> {
             val permissions = perms.toMutableList()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 permissions.add(Manifest.permission.POST_NOTIFICATIONS)
             }
-            return perms.toSet()
+            return permissions.toSet()
         }
 
         /**
