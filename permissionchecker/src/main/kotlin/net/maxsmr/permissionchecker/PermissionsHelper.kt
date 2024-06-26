@@ -198,7 +198,10 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
     }
 
     @TargetApi(Build.VERSION_CODES.R)
-    private fun startManageAllFilesActivity(activity: Activity, requestCode: Int?, applicationId: String) {
+    fun startManageAllFilesActivity(activity: Activity, requestCode: Int?, applicationId: String) {
+        if (isExternalStorageManager) {
+            return
+        }
 
         fun start(intent: Intent) {
             requestCode?.let {
@@ -211,6 +214,7 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
         try {
             val uri: Uri = Uri.parse("package:$applicationId")
             val intent = Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, uri)
+            intent.setData(Uri.parse("package:${activity.packageName}"));
             start(intent)
         } catch (e: Exception) {
             val intent = Intent()

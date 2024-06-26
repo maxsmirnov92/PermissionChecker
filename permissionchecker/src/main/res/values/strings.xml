@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">PermissionChecker</string>
     <string name="dialog_message_permission_denied">App requires permission %s to work properly</string>
     <string name="dialog_message_permission_granted">Permission granted %s</string>
     <string name="dialog_message_permissions_empty">No permissions for this app</string>
