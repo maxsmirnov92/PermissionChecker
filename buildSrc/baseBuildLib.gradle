@@ -3,6 +3,7 @@
 //}
 apply from: "$rootDir/buildSrc/config.gradle"
 apply from: "$rootDir/buildSrc/buildUtils.gradle"
+apply from: "$rootDir/buildSrc/androidBuildTasks.gradle"
 
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
@@ -32,11 +33,13 @@ android {
         def module = project.getModuleInfoByPath(project.path)
         versionCode project.getModuleVersionCode(module)
         versionName project.getModuleVersionName(module)
-        setProperty("archivesBaseName", "${project.name}-${versionName}")
+//        setProperty("archivesBaseName", "${project.name}-${versionName}")
 
         vectorDrawables.useSupportLibrary = true
 
         consumerProguardFiles "consumer-rules.pro"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -55,15 +58,6 @@ android {
         }
     }
 
-    task sourcesJar(type: Jar) {
-        archiveClassifier.set('sources')
-        from android.sourceSets.main.java.srcDirs
-    }
-
-    artifacts {
-        archives sourcesJar
-    }
-
     buildTypes {
         debug {
             debuggable true
@@ -79,31 +73,59 @@ android {
 //        }
     }
 
-    dexOptions {
-        javaMaxHeapSize "4G"
-    }
     kotlinOptions {
         jvmTarget = jvmVersion
     }
 
     libraryVariants.all { variant ->
         variant.outputs.all { output ->
-            def module = project.getModuleInfoByPath(project.path)
-            def baseName = "${project.name}-${variant.name}-${project.getModuleVersionName(module)}"
+            def baseName = "${project.name}-${variant.name}-${project.getModuleVersionNameByPath(project.path)}"
             def outputFileName = "${baseName}.aar"
             println "Setting aar name to $outputFileName for variant ${variant.name}"
             output.outputFileName = outputFileName
         }
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
-dependencies {
+artifacts {
+    archives sourcesJar
+//    archives javadocJar
+}
 
+//afterEvaluate {
+//    assembleRelease.finalizedBy aarWithSources
+//}
+
+dependencies {
     // libs/*.jar
-    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+//    Direct local .aar file dependencies are not supported when building an AAR.
+//    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
     // Jetbrains annotations
     api "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+
+    testImplementation "androidx.test:core:$testCoreVersion"
+    testImplementation "androidx.test.ext:junit:$jUnitExtVersion"
+    testImplementation "androidx.test:rules:$testCoreVersion"
+    testImplementation "junit:junit:$jUnitVersion"
+    testImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
+    testImplementation "androidx.test:runner:$testCoreVersion"
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
+
+    androidTestImplementation "androidx.test:core:$testCoreVersion"
+    androidTestImplementation "androidx.test.ext:junit:$jUnitExtVersion"
+    androidTestImplementation "androidx.test:rules:$testCoreVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
+    androidTestImplementation "androidx.test:runner:$testCoreVersion"
+    androidTestImplementation 'org.jetbrains.kotlin:kotlin-test'
+    androidTestImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
 }
 
 configurations {

@@ -1,29 +1,30 @@
 apply from: "$rootDir/buildSrc/config.gradle"
 apply from: "$rootDir/buildSrc/buildUtils.gradle"
+apply from: "$rootDir/buildSrc/javaBuildTasks.gradle"
 
 apply plugin: 'java-library'
 apply plugin: 'kotlin'
 
 version = project.getModuleVersionNameByPath(project.path)
-archivesBaseName = "${moduleInfo.id}+${moduleInfo.versionName}"
+//archivesBaseName = moduleInfo.id
 
 java {
     sourceCompatibility = sourceCompatibilityVersion
     targetCompatibility = sourceCompatibilityVersion
 }
 
-task sourcesJar(type: Jar) {
-    archiveClassifier  = 'sources'
-    from java.sourceSets.main.java.srcDirs
-}
-
 artifacts {
     archives sourcesJar
+//    archives javadocJar
 }
 
 dependencies {
-    api fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     // Jetbrains annotations
     implementation "org.jetbrains:annotations:$jetbrainsAnnotationsVersion"
+
+    testImplementation "junit:junit:$jUnitVersion"
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
 }

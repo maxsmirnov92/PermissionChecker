@@ -4,10 +4,6 @@ buildscript {
 
     apply from: 'buildSrc/config.gradle'
 
-    ext {
-        easyPermissionsVersion = '3.0.0'
-    }
-
     repositories {
         google()
         maven { url "https://plugins.gradle.org/m2/" }

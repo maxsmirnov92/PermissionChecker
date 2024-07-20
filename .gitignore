@@ -7,17 +7,17 @@
 *.iws
 
 .gradle
+.kotlin
 .idea/
+!.idea/codeStyles/*
 
 #################
 # generated files
 /build
-*/.cxx
-*/*/.cxx
+.cxx
 
 .externalNativeBuild
 /temp
 _mirror
 
-keystore.properties
 local.properties

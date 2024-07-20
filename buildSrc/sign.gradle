@@ -1,4 +1,4 @@
-apply from: "$rootDir/buildSrc/buildTasks.gradle"
+apply from: "$rootDir/buildSrc/signTasks.gradle"
 
 ext.signAar = { context ->
 

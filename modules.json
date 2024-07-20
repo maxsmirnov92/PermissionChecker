@@ -2,7 +2,7 @@
   {
     "id": "permissionchecker",
     "type": "lib",
-    "versionName": "1.2.0.1",
+    "versionName": "1.2.1.0",
     "versionCode": 1,
     "stable": true,
     "unstableVersion": 0,

@@ -25,8 +25,9 @@ android {
         multiDexEnabled true
         vectorDrawables.useSupportLibrary = true
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -67,10 +68,6 @@ android {
         }
     }
 
-    dexOptions {
-        javaMaxHeapSize "4G"
-    }
-
     kotlinOptions {
         jvmTarget = jvmVersion
     }
@@ -94,13 +91,16 @@ dependencies {
     testImplementation "junit:junit:$jUnitVersion"
     testImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
     testImplementation "androidx.test:runner:$testCoreVersion"
-    testImplementation "org.robolectric:robolectric:$robolectricVersion"
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
 
     androidTestImplementation "androidx.test:core:$testCoreVersion"
     androidTestImplementation "androidx.test.ext:junit:$jUnitExtVersion"
     androidTestImplementation "androidx.test:rules:$testCoreVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espressoVersion"
     androidTestImplementation "androidx.test:runner:$testCoreVersion"
+    androidTestImplementation 'org.jetbrains.kotlin:kotlin-test'
+    androidTestImplementation 'org.jetbrains.kotlin:kotlin-test-junit'
 }
 
 configurations {

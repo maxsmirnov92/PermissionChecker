@@ -20,22 +20,22 @@ import net.maxsmr.android.build.tasks.*
 //    enableLogging = true
 //}
 
-task signReleaseJarTask(type: SignReleaseArchiveTask) {
+tasks.register('signReleaseJarTask', SignReleaseArchiveTask) {
     def propsFile = new File("$rootDir/buildSrc/keystore.properties")
     def props = new Properties()
     props.load(new FileInputStream(propsFile))
     keystoreAlias = props['alias']
     keystorePassword = props['signingPassword']
-    archivePath = "${project.buildDir}/libs/${project.getProperties()[archivesBaseName]}-${project.version}.jar"
+    archivePath = "${project.buildDir}/libs/${project.archivesBaseName}-${project.version}.jar"
     archiveExtension = "jar"
 }
 
-task checkSignedReleaseJarTask(type: CheckSignedArchiveTask) {
+tasks.register('checkSignedReleaseJarTask', CheckSignedArchiveTask) {
     def propsFile = new File("$rootDir/buildSrc/keystore.properties")
     def props = new Properties()
     props.load(new FileInputStream(propsFile))
     keystoreAlias = props['alias']
     keystorePassword = props['signingPassword']
-    archivePath = "${project.buildDir}/libs/${project.getProperties()[archivesBaseName]}-${project.version}-signed.jar"
+    archivePath = "${project.buildDir}/libs/${project.archivesBaseName}-${project.version}-signed.jar"
     enableLogging = true
 }

@@ -1,0 +1,6 @@
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier = 'sources'
+    from java.sourceSets.main.java.srcDirs, java.sourceSets.main.kotlin.srcDirs
+}
+
+// чтобы сбилдить либу - вызвать "gradlew jar"
