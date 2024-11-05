@@ -81,7 +81,7 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
         perms: Collection<String>,
         callbacks: PermissionsCallbacks,
     ): ResultListener? {
-        val filtered = filterStoragePermissionsByApiVersion(perms)
+        val filtered = perms.filterPermissionsByApiVersion().toSet()
         if (filtered.isEmpty() || hasPermissions(context, false, filtered)) {
             callbacks.onAllGranted()
             return null
@@ -130,7 +130,7 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
 
     private fun hasPermissions(context: Context, filter: Boolean, perms: Collection<String>): Boolean {
         if (perms.isEmpty()) return true
-        val target = if (filter) filterStoragePermissionsByApiVersion(perms) else perms
+        val target = if (filter) perms.filterPermissionsByApiVersion() else perms
         val granted = target.filter { EasyPermissions.hasPermissions(context, it) }
         removeFromDenied(granted)
         return target.size == granted.size
@@ -274,28 +274,49 @@ class PermissionsHelper(private val permanentlyDeniedStorage: PrefsStorage) {
 
     companion object {
 
-        fun withPostNotificationsByApiVersion(perms: Collection<String>): Set<String> {
-            val permissions = perms.toMutableList()
+        fun Collection<String>.appendPostNotificationsByApiVersion(): Set<String> {
+            val permissions = toMutableList()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                // этого пермишна нет на более ранних
                 permissions.add(Manifest.permission.POST_NOTIFICATIONS)
             }
             return permissions.toSet()
         }
 
+        fun Collection<String>.appendReadMediaPermissionsByApiVersion(): Set<String> {
+            val permissions = toMutableList()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                permissions.add(Manifest.permission.READ_MEDIA_AUDIO)
+                permissions.add(Manifest.permission.READ_MEDIA_VIDEO)
+                permissions.add(Manifest.permission.READ_MEDIA_IMAGES)
+            }
+            return permissions.toSet()
+        }
+
+        private fun Collection<String>.filterPermissionsByApiVersion(): List<String> {
+            val result = filterStoragePermissionsByApiVersion()
+            return result.filter {
+                // для Android 14 ACCESS_BACKGROUND_LOCATION (появился с Android 10) нельзя запрашивать вместе с остальными:
+                // нужен отдельный rationale-диалог и переброс в настройки
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+                        || it != Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            }
+        }
+
         /**
          * Фильтрует разрешения, которые не надо запрашивать для определенных версий апи (см. флаги в манифесте приложения)
          */
-        private fun filterStoragePermissionsByApiVersion(perms: Collection<String>): Set<String> {
+        private fun Collection<String>.filterStoragePermissionsByApiVersion(): List<String> {
             return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
                 || Build.VERSION.SDK_INT == Build.VERSION_CODES.Q && Environment.isExternalStorageLegacy()
             ) {
                 // ниже Q или равно Q с requestLegacyExternalStorage=true в манифесте
                 // write всегда, если есть (уже включает read)
-                perms.toSet()
+                this.toList()
             } else {
                 // > Q (или Q и не legacy) - форсированное использование scoped storage, разрешение на запись не требуется. На чтение нужно для
                 // чтения чужих файлов или своих файлов после переустановки приложения
-                perms.filter { it != WRITE_EXTERNAL_STORAGE }.toSet()
+                this.filter { it != WRITE_EXTERNAL_STORAGE }
             }
         }
     }
