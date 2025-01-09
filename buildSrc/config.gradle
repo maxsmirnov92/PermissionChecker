@@ -7,15 +7,15 @@ ext {
 //    bintrayGradleVersion = "1+"
 //    mavenGradleVersion = "1+"
 
-    compileSdkVersion = 34
-    targetSdkVersion = 31
+    compileSdkVersion = 35
+    targetSdkVersion = 35
     minSdkVersion = 21
 
-    gradlePluginVersion = '8.5.1'
+    gradlePluginVersion = '8.6.1'
 //    buildToolsVersion = '30.0.3'
-    kotlinVersion = '2.0.0' // '1.9.24'
+    kotlinVersion = '2.0.21' // '1.9.24'
     kotlinGradlePluginVersion = kotlinVersion
-    androidxCoreVersion = '1.13.1'
+    androidxCoreVersion = '1.15.0'
     androidxAppCompatVersion = '1.7.0'
     jetbrainsAnnotationsVersion = "24.1.0"
 
